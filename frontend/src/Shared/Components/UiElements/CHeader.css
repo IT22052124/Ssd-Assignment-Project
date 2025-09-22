@@ -1,0 +1,14 @@
+
+.dropdownProfile {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0; /* Initially hidden */
+    transform: translateY(-10px); /* Initially slightly above */
+    visibility: hidden; /* Initially hidden */
+}
+
+/* Define styles when the dropdown is visible */
+.dropdownProfile-visible {
+    opacity: 1; /* Fully visible */
+    transform: translateY(0); /* Reset position */
+    visibility: visible; /* Set visible */
+}

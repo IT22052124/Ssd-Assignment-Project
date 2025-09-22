@@ -1,0 +1,8 @@
+.review-icon {
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .review-icon:hover {
+    transform: scale(1.2);
+  }
+  

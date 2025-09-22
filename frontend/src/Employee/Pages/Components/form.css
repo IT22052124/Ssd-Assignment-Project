@@ -1,0 +1,7 @@
+.form-container {
+    position: sticky;
+    top: 0;
+    z-index: 1000; /* Ensure the form stays on top of other elements */
+    background-color: #fff; /* Set a background color to make it stand out */
+  }
+
