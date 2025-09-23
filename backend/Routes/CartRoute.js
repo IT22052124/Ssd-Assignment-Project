@@ -1,17 +1,16 @@
 // cartRoutes.js
 
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const cartController = require('../Controllers/cart-controllers'); 
+const cartController = require("../Controllers/cart-controllers");
+const authCustomer = require("../middleware/authCustomer");
 
-router.post('/cart/new', cartController.createCart);
-router.get('/', cartController.listCart);
-router.get('/list/:id', cartController.listCartByUId);
-router.put('/cart/:id', cartController.updateCart);
-router.delete('/:id', cartController.deleteCart);
-router.get('/carts/:id', cartController.listCartById);
-router.get('/carts', cartController.getCartItems);
+router.post("/cart/new", cartController.createCart);
+router.get("/", cartController.listCart);
+router.get("/list/:id", authCustomer, cartController.listCartByUId);
+router.put("/cart/:id", cartController.updateCart);
+router.delete("/:id", cartController.deleteCart);
+router.get("/carts/:id", cartController.listCartById);
+router.get("/carts", cartController.getCartItems);
 
 module.exports = router;
-
-

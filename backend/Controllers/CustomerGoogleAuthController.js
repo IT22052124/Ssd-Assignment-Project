@@ -2,6 +2,12 @@ const { OAuth2Client } = require("google-auth-library");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const Customer = require("../Models/CustomerModel");
+const jwt = require("jsonwebtoken");
+const signCustomerToken = (cust) => {
+  const payload = { sub: String(cust._id), mail: cust.mail };
+  const secret = process.env.JWT_SECRET || "dev_secret_change_me";
+  return jwt.sign(payload, secret, { expiresIn: "2h" });
+};
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -31,11 +37,9 @@ const googleCustomerSignup = async (req, res) => {
     // If already exists, prevent duplicate signup
     const existing = await Customer.findOne({ mail: email });
     if (existing) {
-      return res
-        .status(409)
-        .json({
-          message: "Customer already exists. Please sign in with Google.",
-        });
+      return res.status(409).json({
+        message: "Customer already exists. Please sign in with Google.",
+      });
     }
 
     // Generate sequential ID like C0001
@@ -68,6 +72,15 @@ const googleCustomerSignup = async (req, res) => {
 
     // Return in the same shape your login page expects
     const safe = await Customer.findById(customer._id).select("-password");
+    try {
+      const token = signCustomerToken(safe);
+      res.cookie("cust_access", token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+        maxAge: 2 * 60 * 60 * 1000,
+      });
+    } catch (e) {}
     return res.json({ message: "Success", user: safe });
   } catch (err) {
     console.error("Google customer signup error:", err?.message || err);
@@ -120,6 +133,15 @@ const googleCustomerAuth = async (req, res) => {
     }
 
     const safe = await Customer.findById(customer._id).select("-password");
+    try {
+      const token = signCustomerToken(safe);
+      res.cookie("cust_access", token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+        maxAge: 2 * 60 * 60 * 1000,
+      });
+    } catch (e) {}
     return res.json({ message: "Success", user: safe });
   } catch (err) {
     console.error("Google customer auth error:", err?.message || err);

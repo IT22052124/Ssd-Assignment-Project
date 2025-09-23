@@ -145,8 +145,18 @@ const CustomerHeader = (props) => {
                 </span>
                 <span>
                   <img
-                    src={`http://localhost:5000/${customer?.image}`}
+                    src={
+                      customer?.image?.startsWith("http")
+                        ? customer.image
+                        : `http://localhost:5000/${customer?.image}`
+                    }
+                    alt="User"
                     className="h-10 w-10 rounded-full object-cover shadow"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src =
+                        "https://flowbite.com/docs/images/people/profile-picture-5.jpg";
+                    }}
                   />
                 </span>
                 <svg

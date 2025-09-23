@@ -3,6 +3,7 @@ const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const ProductRoute = require("./Routes/ProductRoute");
 const SupplierRoute = require("./Routes/SupplierRoute");
@@ -42,10 +43,12 @@ const CustomerGoogleSignupRoute = require("./Routes/CustomerGoogleSignupRoute");
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cookieParser());
 app.use(sanitize);
 app.use(
   cors({
     origin: "http://localhost:3000",
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type"],
   })
