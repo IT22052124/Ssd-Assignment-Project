@@ -306,9 +306,9 @@ const App = () => {
                 path="/"
                 exact
                 element={
-                  <CheckLogin>
+                  
                     <LoginPage />
-                  </CheckLogin>
+                
                 }
               />
               <Route

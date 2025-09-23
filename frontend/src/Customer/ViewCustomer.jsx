@@ -2,7 +2,8 @@ import axios from 'axios';
 import React, { useContext, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom';
 import ViewCard from './Components/ViewCard';
-import Header from '../Shared/Components/UiElements/header';
+import CustomerHeader from '../Shared/Components/UiElements/CustomerHeader';
+
 import { AuthContext } from "../Shared/Components/context/authcontext";
 
 
@@ -33,9 +34,9 @@ const ViewCustomer = () => {
     return (
       <>
         <div className='flex'>
-          <div>
-            <Header/>
-          </div>
+          
+            <CustomerHeader/>
+        
           <div className='flex-1 w-64 ...'>
           <ViewCard
             customer = {customer}

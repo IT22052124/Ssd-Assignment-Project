@@ -36,6 +36,8 @@ const EmployeePersonLoginRoute = require("./Routes/EmployeeloginPersonRoute");
 const InvoiceRoute = require("./Routes/InvoiceRoute");
 const EmployeeGoogleAuthRoute = require("./Routes/EmployeeGoogleAuthRoute");
 const EmployeeGoogleSignupRoute = require("./Routes/EmployeeGoogleSignupRoute");
+const CustomerGoogleAuthRoute = require("./Routes/CustomerGoogleAuthRoute");
+const CustomerGoogleSignupRoute = require("./Routes/CustomerGoogleSignupRoute");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -80,6 +82,8 @@ app.use("/EmployeeChecklogin", EmployeePersonLoginRoute);
 app.use("/Invoice", InvoiceRoute);
 app.use("/auth/google/employee", EmployeeGoogleAuthRoute);
 app.use("/auth/google/employee/signup", EmployeeGoogleSignupRoute);
+app.use("/auth/google/customer", CustomerGoogleAuthRoute);
+app.use("/auth/google/customer/signup", CustomerGoogleSignupRoute);
 
 const PORT = process.env.PORT || 5000;
 mongoose
