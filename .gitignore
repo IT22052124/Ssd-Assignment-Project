@@ -79,6 +79,11 @@ web_modules/
 .env.production.local
 .env.local
 
+# Ignore all .env files (stop committing secrets)
+.env
+backend/.env
+frontend/.env
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
