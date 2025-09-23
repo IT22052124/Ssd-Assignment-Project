@@ -68,6 +68,7 @@ export const EmployeeLoginPage = () => {
     axios
       .post("http://localhost:5000/EmployeeChecklogin/", { username, password })
       .then((res) => {
+        console.log(res.data);
         if (res.data.message === "admin") {
           auth.login(res.data?.employeeId, res.data?.avatarUrl);
           Toast("Login Successfully !!", "success");
@@ -80,8 +81,8 @@ export const EmployeeLoginPage = () => {
           Toast("Invalid email / Password", "error");
         }
       })
-      .catch(() => {
-        Toast("Invalid", "error");
+      .catch((error) => {
+        Toast(error.response.data.message, "error");
       });
   };
 

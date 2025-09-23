@@ -8,7 +8,14 @@ createOrder = async (req, res) => {
   try {
     const { cartitem, uid } = req.body;
 
-    console.log(cartitem)
+    // Security check: Verify the uid in the request body matches the authenticated customer
+    if (uid !== req.customer.id) {
+      return res.status(403).json({
+        message: "Forbidden - You can only create orders for yourself",
+      });
+    }
+
+    console.log(cartitem);
 
     const latestOrder = await Order.find().sort({ _id: -1 }).limit(1);
     let id;
@@ -26,43 +33,43 @@ createOrder = async (req, res) => {
           $inc: { Stock: -item.quantity },
         });
 
-      return {
-        productId: item.product._id,
-        quantity: item.quantity,
-      };
-    }));
-
-
+        return {
+          productId: item.product._id,
+          quantity: item.quantity,
+        };
+      })
+    );
 
     const date = new Date();
 
-    console.log(date)
-// Get Sri Lanka time zone offset in milliseconds
+    console.log(date);
+    // Get Sri Lanka time zone offset in milliseconds
 
+    // Calculate Sri Lanka time
 
-// Calculate Sri Lanka time
+    // Extract time components
+    const sriLankaHours = date.getHours();
+    const sriLankaMinutes = date.getMinutes();
+    const sriLankaSeconds = date.getSeconds();
 
+    console.log(sriLankaHours, sriLankaMinutes);
 
-// Extract time components
-const sriLankaHours = date.getHours();
-const sriLankaMinutes = date.getMinutes();
-const sriLankaSeconds = date.getSeconds();
+    // Extract date components
+    const sriLankaYear = date.getFullYear();
+    const sriLankaMonth = date.getMonth() + 1; // Month is zero-indexed, so add 1
+    const sriLankaDay = date.getDate();
 
-console.log(sriLankaHours, sriLankaMinutes);
+    // Adjust time if it's a single digit
+    const adjustedSriLankaHours =
+      sriLankaHours < 10 ? "0" + sriLankaHours : sriLankaHours;
+    const adjustedSriLankaMinutes =
+      sriLankaMinutes < 10 ? "0" + sriLankaMinutes : sriLankaMinutes;
+    const adjustedSriLankaSeconds =
+      sriLankaSeconds < 10 ? "0" + sriLankaSeconds : sriLankaSeconds;
 
-// Extract date components
-const sriLankaYear = date.getFullYear();
-const sriLankaMonth = date.getMonth() + 1; // Month is zero-indexed, so add 1
-const sriLankaDay = date.getDate();
-
-// Adjust time if it's a single digit
-const adjustedSriLankaHours = sriLankaHours < 10 ? '0' + sriLankaHours : sriLankaHours;
-const adjustedSriLankaMinutes = sriLankaMinutes < 10 ? '0' + sriLankaMinutes : sriLankaMinutes;
-const adjustedSriLankaSeconds = sriLankaSeconds < 10 ? '0' + sriLankaSeconds : sriLankaSeconds;
-
-// Assign to two separate variables
-const sriLankaTimeStr = `${adjustedSriLankaHours}:${adjustedSriLankaMinutes}:${adjustedSriLankaSeconds}`;
-const sriLankaDateStr = `${sriLankaYear}-${sriLankaMonth}-${sriLankaDay}`;
+    // Assign to two separate variables
+    const sriLankaTimeStr = `${adjustedSriLankaHours}:${adjustedSriLankaMinutes}:${adjustedSriLankaSeconds}`;
+    const sriLankaDateStr = `${sriLankaYear}-${sriLankaMonth}-${sriLankaDay}`;
 
     const profitTable = await Promise.all(
       cartitem.map(async (item) => {
@@ -111,13 +118,17 @@ const sriLankaDateStr = `${sriLankaYear}-${sriLankaMonth}-${sriLankaDay}`;
       orderId: id,
       userId: uid,
       CartItems: items,
-      date:sriLankaDateStr,
-      time:sriLankaTimeStr
+      date: sriLankaDateStr,
+      time: sriLankaTimeStr,
     };
 
     const order = await Order.create(newOrder);
     for (let item of cartitem) {
-      await Notification.createNotification({ body: { productId: item.product._id } }, null , null);
+      await Notification.createNotification(
+        { body: { productId: item.product._id } },
+        null,
+        null
+      );
     }
     // Respond with a success message
     res.status(201).json({ message: "Order placed successfully" });
@@ -131,11 +142,13 @@ const sriLankaDateStr = `${sriLankaYear}-${sriLankaMonth}-${sriLankaDay}`;
 const latestOrder = async (req, res) => {
   try {
     const { userId } = req.params;
-    const latestOrder = await Order.find({ userId: userId }).sort({ createdAt: -1 }).limit(1);
+    const latestOrder = await Order.find({ userId: userId })
+      .sort({ createdAt: -1 })
+      .limit(1);
     res.status(200).json(latestOrder);
   } catch (error) {
     console.error("Error fetching latest order:", error);
-    res.status(500).json({ message: 'Failed to fetch latest order', error });
+    res.status(500).json({ message: "Failed to fetch latest order", error });
   }
 };
 
@@ -147,8 +160,7 @@ const listOrder = async (req, res) => {
       .sort({ createdAt: -1 });
 
     return res.status(200).json(order);
-  } 
-  catch (error) {
+  } catch (error) {
     console.log(error.message);
     res.status(500).send({ message: error.message });
   }
@@ -156,12 +168,10 @@ const listOrder = async (req, res) => {
 
 const listOrders = async (req, res) => {
   try {
-    const order = await Order.find({})
-    .populate("CartItems.productId");
+    const order = await Order.find({}).populate("CartItems.productId");
 
     return res.status(200).json(order);
-  } 
-  catch (error) {
+  } catch (error) {
     console.log(error.message);
     res.status(500).send({ message: error.message });
   }
@@ -169,14 +179,13 @@ const listOrders = async (req, res) => {
 
 const listOrderById = async (req, res) => {
   try {
-    const {uid}= req.params;
-    const order = await Order.find({userId:uid})
-    .populate("CartItems.productId")
-    .sort({ createdAt: -1 });
+    const { uid } = req.params;
+    const order = await Order.find({ userId: uid })
+      .populate("CartItems.productId")
+      .sort({ createdAt: -1 });
 
     return res.status(200).json(order);
-  } 
-  catch (error) {
+  } catch (error) {
     console.log(error.message);
     res.status(500).send({ message: error.message });
   }
@@ -187,11 +196,10 @@ const GetProductReportByDateRange = async (req, res) => {
     const startDate = new Date(req.query.startDate);
     const endDate = new Date(req.query.endDate);
 
-    console.log(startDate,endDate)
+    console.log(startDate, endDate);
     const orders = await Order.find({
       createdAt: { $gte: startDate, $lte: endDate },
-    })
-    .populate("CartItems.productId");
+    }).populate("CartItems.productId");
 
     res.json(orders);
   } catch (error) {
@@ -222,11 +230,10 @@ const checkOrder = async (req, res) => {
   }
 };
 
-
 exports.createOrder = createOrder;
 exports.listOrder = listOrder;
 exports.checkOrder = checkOrder;
 exports.listOrders = listOrders;
 exports.GetProductReportByDateRange = GetProductReportByDateRange;
 exports.listOrderById = listOrderById;
-exports.latestOrder=latestOrder;
+exports.latestOrder = latestOrder;

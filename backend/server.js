@@ -17,6 +17,7 @@ const cart = require("./Routes/CartRoute");
 const CustomerRoute = require("./Routes/CustomerRoute");
 const OrderRoute = require("./Routes/OrderRoute");
 const LoginRoute = require("./Routes/LoginRoute");
+const LogoutRoute = require("./Routes/LogoutRoute"); // Add the logout route
 const NotificationRoute = require("./Routes/NotificationRoute");
 const WholesalecustomerRoute = require("./Routes/WholesalecustomerRoute");
 const SalaryRoute = require("./Routes/SalaryRoute");
@@ -39,6 +40,8 @@ const EmployeeGoogleAuthRoute = require("./Routes/EmployeeGoogleAuthRoute");
 const EmployeeGoogleSignupRoute = require("./Routes/EmployeeGoogleSignupRoute");
 const CustomerGoogleAuthRoute = require("./Routes/CustomerGoogleAuthRoute");
 const CustomerGoogleSignupRoute = require("./Routes/CustomerGoogleSignupRoute");
+const { apiRateLimiter } = require("./utils/rateLimiter");
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -47,12 +50,35 @@ app.use(cookieParser());
 app.use(sanitize);
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// Import and apply API rate limiter to all routes
+app.use(apiRateLimiter);
+
+// Add security headers
+app.use((req, res, next) => {
+  // Prevent clickjacking
+  res.setHeader("X-Frame-Options", "DENY");
+
+  // Enable XSS protection in browsers
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+
+  // Prevent MIME type sniffing
+  res.setHeader("X-Content-Type-Options", "nosniff");
+
+  // Strict Content Security Policy
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+  );
+
+  next();
+});
 
 app.use("/product", ProductRoute);
 app.use("/customer", CustomerRoute);
@@ -65,6 +91,7 @@ app.use("/cart", cart);
 app.use("/OffPay", OffPay);
 app.use("/OnPay", OnPay);
 app.use("/Login", LoginRoute);
+app.use("/logout", LogoutRoute); 
 app.use("/order", OrderRoute);
 app.use("/salary", SalaryRoute);
 app.use("/notify", NotificationRoute);
