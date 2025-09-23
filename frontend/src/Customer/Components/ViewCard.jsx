@@ -19,7 +19,7 @@ const ViewCard = (props) => {
             src={
               props.customer?.image?.startsWith("http")
                 ? props.customer.image
-                : `http://localhost:5000/${props.customer.image}`
+                : `https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_incoming&w=740&q=80`
             }
             alt="profile_pic"
             onError={(e) => {

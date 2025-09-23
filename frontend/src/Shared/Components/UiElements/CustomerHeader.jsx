@@ -148,14 +148,13 @@ const CustomerHeader = (props) => {
                     src={
                       customer?.image?.startsWith("http")
                         ? customer.image
-                        : `http://localhost:5000/${customer?.image}`
+                        : `https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_incoming&w=740&q=80`
                     }
-                    alt="User"
                     className="h-10 w-10 rounded-full object-cover shadow"
                     onError={(e) => {
                       e.currentTarget.onerror = null;
                       e.currentTarget.src =
-                        "https://flowbite.com/docs/images/people/profile-picture-5.jpg";
+                        "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_incoming&w=740&q=80";
                     }}
                   />
                 </span>
