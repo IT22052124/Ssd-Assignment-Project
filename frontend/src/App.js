@@ -149,7 +149,7 @@ const App = () => {
         <Route path="/Employee/attendance" exact element={<MarkAttendance />}/>
         <Route path="/Employee/attendancelist" exact element={<Attendance />}/>
         <Route path="/Employeelogin" exact element={<Employeelogin />}/>
-        <Route path="/Employeelogin/new" exact element={<Employeeloginform />}/>
+        <Route path="/Employee/create" exact element={<Employeeloginform />}/>
         <Route path="/Employeelogin/update/:id" exact element={<EmployeeloginformUpdate />}/>
         <Route path="/Salaryform" exact element={<SalaryCalculatorForm />}/>
         <Route path="/salaryHistory" exact element={<HistoryTable/>}/>
