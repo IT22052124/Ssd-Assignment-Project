@@ -38,6 +38,7 @@ const EmployeeProfile = () => {
     fetchProfile();
   }, [employeePersonId, navigate]);
 
+  const defaultImg = "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_incoming&w=740&q=80"
   const label = isCashierLoggedIn
     ? "Cashier"
     : isLoggedInEmployee
@@ -66,7 +67,7 @@ const EmployeeProfile = () => {
                     onError={(e) => {
                       e.currentTarget.onerror = null;
                       e.currentTarget.src =
-                        "https://flowbite.com/docs/images/people/profile-picture-5.jpg";
+                        "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_incoming&w=740&q=80";
                     }}
                   />
                 ) : (

@@ -7,6 +7,7 @@ import { EmployeeAuthContext } from "../context/EmployeeAuthContext";
 const Header = () => {
   const navigate = useNavigate();
   const { avatarUrl } = useContext(EmployeeAuthContext);
+  
   const [clickNotification, setClickNotification] = useState(false);
   const [notify, setNotify] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -158,9 +159,8 @@ const Header = () => {
                       className="w-8 h-8 rounded-full"
                       src={
                         avatarUrl ||
-                        "https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                        "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_incoming&w=740&q=80"
                       }
-                      alt="user photo"
                     />
                   </button>
                 </div>
