@@ -20,14 +20,17 @@ export const EmployeeLoginPage = () => {
   const handleGoogleCredential = async (response) => {
     try {
       const idToken = response.credential;
-      const res = await axios.post("http://localhost:5000/auth/google/employee", { idToken });
+      const res = await axios.post(
+        "http://localhost:5000/auth/google/employee",
+        { idToken }
+      );
 
       if (res.data?.message === "admin") {
-        auth.login(res.data.employeeId);
+        auth.login(res.data.employeeId, res.data?.avatarUrl);
         Toast("Signed in as Admin via Google ✅", "success");
         navigate("/Dashboard");
       } else if (res.data?.message === "cashier") {
-        auth.cashierlogin(res.data.employeeId);
+        auth.cashierlogin(res.data.employeeId, res.data?.avatarUrl);
         Toast("Signed in as Cashier via Google ✅", "success");
         navigate("/Billing");
       } else {
@@ -66,11 +69,11 @@ export const EmployeeLoginPage = () => {
       .post("http://localhost:5000/EmployeeChecklogin/", { username, password })
       .then((res) => {
         if (res.data.message === "admin") {
-          auth.login(res.data?.employeeId);
+          auth.login(res.data?.employeeId, res.data?.avatarUrl);
           Toast("Login Successfully !!", "success");
           navigate("/Dashboard");
         } else if (res.data.message === "cashier") {
-          auth.cashierlogin(res.data?.employeeId);
+          auth.cashierlogin(res.data?.employeeId, res.data?.avatarUrl);
           Toast("Login Successfully !!", "success");
           navigate("/Billing");
         } else {
@@ -85,7 +88,11 @@ export const EmployeeLoginPage = () => {
   return (
     <div
       className="h-screen"
-      style={{ backgroundImage: `url('/img/background.jpg')`, backgroundSize: "cover", backgroundPosition: "center" }}
+      style={{
+        backgroundImage: `url('/img/background.jpg')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
     >
       <section className="m-8 pl-5 pt-14 flex gap-4">
         <div className="w-full lg:w-3/5 mt-24">
@@ -93,14 +100,26 @@ export const EmployeeLoginPage = () => {
             <Typography variant="h2" className="font-bold mb-4">
               Sign In
             </Typography>
-            <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">
+            <Typography
+              variant="paragraph"
+              color="blue-gray"
+              className="text-lg font-normal"
+            >
               Enter your email and password, or use Google.
             </Typography>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2" action="#">
+          <form
+            onSubmit={handleSubmit}
+            className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2"
+            action="#"
+          >
             <div className="mb-1 flex flex-col gap-6">
-              <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+              <Typography
+                variant="small"
+                color="blue-gray"
+                className="-mb-3 font-medium"
+              >
                 Your email
               </Typography>
               <Input
@@ -109,9 +128,15 @@ export const EmployeeLoginPage = () => {
                 placeholder="name@mail.com"
                 onChange={(e) => setUsername(e.target.value)}
                 className=" !border-t-blue-gray-200 focus:!border-t-gray-900 placeholder:text-gray-500 placeholder:opacity-100"
-                labelProps={{ className: "before:content-none after:content-none" }}
+                labelProps={{
+                  className: "before:content-none after:content-none",
+                }}
               />
-              <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+              <Typography
+                variant="small"
+                color="blue-gray"
+                className="-mb-3 font-medium"
+              >
                 Password
               </Typography>
               <Input
@@ -120,7 +145,9 @@ export const EmployeeLoginPage = () => {
                 placeholder="********"
                 onChange={(e) => setPassword(e.target.value)}
                 className=" !border-t-blue-gray-200 focus:!border-t-gray-900 placeholder:text-gray-500 placeholder:opacity-100"
-                labelProps={{ className: "before:content-none after:content-none" }}
+                labelProps={{
+                  className: "before:content-none after:content-none",
+                }}
               />
             </div>
 
@@ -129,7 +156,9 @@ export const EmployeeLoginPage = () => {
             </Button>
 
             {/* NEW: Divider */}
-            <div className="my-4 text-center text-sm text-blue-gray-600">or</div>
+            <div className="my-4 text-center text-sm text-blue-gray-600">
+              or
+            </div>
 
             {/* NEW: Google Sign-In button container */}
             <div ref={googleBtnRef} className="flex justify-center"></div>
@@ -138,7 +167,10 @@ export const EmployeeLoginPage = () => {
             <div className="mt-6 text-center">
               <Typography variant="small" color="blue-gray">
                 Don’t have an account?
-                <Link to="/Employee/create" className="text-gray-900 ml-1 underline">
+                <Link
+                  to="/Employee/create"
+                  className="text-gray-900 ml-1 underline"
+                >
                   Sign up
                 </Link>
               </Typography>
@@ -147,7 +179,11 @@ export const EmployeeLoginPage = () => {
         </div>
 
         <div className="w-2/5 h-full hidden lg:block">
-          <img src="/img/pattern.png" className="h-full w-full object-cover rounded-3xl" alt="pattern" />
+          <img
+            src="/img/pattern.png"
+            className="h-full w-full object-cover rounded-3xl"
+            alt="pattern"
+          />
         </div>
       </section>
     </div>

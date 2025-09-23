@@ -5,8 +5,6 @@ const crypto = require("crypto");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-
-
 // POST /auth/google/employee/signup
 // Body: { idToken }
 const googleEmployeeSignup = async (req, res) => {
@@ -24,6 +22,7 @@ const googleEmployeeSignup = async (req, res) => {
     const payload = ticket.getPayload();
     const email = payload?.email;
     const nameFromGoogle = payload?.name;
+    const picture = payload?.picture; // Google profile image URL
 
     if (!email) {
       return res.status(401).json({ message: "Invalid Google token payload" });
@@ -32,15 +31,21 @@ const googleEmployeeSignup = async (req, res) => {
     // If already exists, prevent duplicate signup
     const existing = await EmployeeLogin.findOne({ username: email });
     if (existing) {
-      return res.status(409).json({ message: "Employee already exists. Please sign in with Google." });
+      return res.status(409).json({
+        message: "Employee already exists. Please sign in with Google.",
+      });
     }
 
     // Generate sequential ID like P0001 (matching your existing pattern)
-    const latestEmployee = await EmployeeLogin.find().sort({ _id: -1 }).limit(1);
+    const latestEmployee = await EmployeeLogin.find()
+      .sort({ _id: -1 })
+      .limit(1);
     let nextId;
     if (latestEmployee.length !== 0 && latestEmployee[0].ID) {
       const latestNum = parseInt(String(latestEmployee[0].ID).slice(1));
-      nextId = "P" + String((Number.isNaN(latestNum) ? 0 : latestNum) + 1).padStart(4, "0");
+      nextId =
+        "P" +
+        String((Number.isNaN(latestNum) ? 0 : latestNum) + 1).padStart(4, "0");
     } else {
       nextId = "P0001";
     }
@@ -57,12 +62,14 @@ const googleEmployeeSignup = async (req, res) => {
       role: "Admin",
       username: email,
       password: hashedPassword,
+      avatarUrl: picture,
     });
 
     // Respond in the same shape your frontend expects
     return res.json({
       message: "admin",
       employeeId: employee._id,
+      avatarUrl: employee.avatarUrl || picture || null,
     });
   } catch (err) {
     console.error("Google signup error:", err?.message || err);
@@ -84,6 +91,7 @@ const googleEmployeeAuth = async (req, res) => {
 
     const payload = ticket.getPayload();
     const email = payload?.email;
+    const picture = payload?.picture; // Google profile image URL
 
     if (!email) {
       return res.status(401).json({ message: "Invalid Google token payload" });
@@ -96,11 +104,32 @@ const googleEmployeeAuth = async (req, res) => {
       return res.status(401).json({ message: "Employee not found" });
     }
 
+    // If user signed in before we stored avatars, persist the Google picture now
+    if (picture && (!employee.avatarUrl || employee.avatarUrl !== picture)) {
+      try {
+        employee.avatarUrl = picture;
+        await employee.save();
+      } catch (e) {
+        console.warn(
+          "Failed to persist avatarUrl on Google sign-in:",
+          e?.message || e
+        );
+      }
+    }
+
     // Mirror your existing login response shape
     if (employee.role === "Cashier") {
-      return res.json({ message: "cashier", employeeId: employee._id });
+      return res.json({
+        message: "cashier",
+        employeeId: employee._id,
+        avatarUrl: employee.avatarUrl || picture || null,
+      });
     } else {
-      return res.json({ message: "admin", employeeId: employee._id });
+      return res.json({
+        message: "admin",
+        employeeId: employee._id,
+        avatarUrl: employee.avatarUrl || picture || null,
+      });
     }
   } catch (err) {
     console.error("Google auth error:", err?.message || err);
@@ -108,4 +137,4 @@ const googleEmployeeAuth = async (req, res) => {
   }
 };
 
-module.exports = { googleEmployeeAuth,googleEmployeeSignup };
+module.exports = { googleEmployeeAuth, googleEmployeeSignup };

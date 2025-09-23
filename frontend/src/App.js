@@ -86,6 +86,7 @@ import ProtectedRouteEmployee from "./Shared/Components/context/PrivateEmployeeR
 import ProtectedRouteCashier from "./Shared/Components/context/PrivateCashierRoute";
 import InvoiceTable from "./Invoice/Pages/invoiceTable";
 import AdminForm from "../src/Employee/Pages/Components/adminForm";
+import EmployeeProfile from "./Employee/Pages/Components/EmployeeProfile";
 
 const App = () => {
   return (
@@ -359,6 +360,7 @@ const App = () => {
                 exact
                 element={<DeliveryPersonOrders />}
               />
+              <Route path="/profile" exact element={<EmployeeProfile />} />
             </Routes>
           </Router>
         </EmployeeAuthProvider>

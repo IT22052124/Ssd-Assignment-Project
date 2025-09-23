@@ -54,7 +54,7 @@ const createEmployeeLogin = async (req, res, next) => {
 // responding employees
 const listEmployeeLogin = async (req, res) => {
   try {
-    const employee = await Employeelogin.find({});
+    const employee = await Employeelogin.find({}, { password: 0 });
     return res.status(200).json(employee);
   } catch (error) {
     console.log(error.message);
@@ -65,7 +65,34 @@ const listEmployeeLogin = async (req, res) => {
 const UpdateEmployeeLogin = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await Employeelogin.findByIdAndUpdate(id, req.body);
+    const allowed = {};
+    if (typeof req.body.name === "string") allowed.name = req.body.name;
+    if (typeof req.body.username === "string")
+      allowed.username = req.body.username;
+    if (typeof req.body.role === "string") {
+      const role = req.body.role;
+      const allowedRoles = ["Admin", "Cashier"];
+      if (allowedRoles.includes(role)) allowed.role = role;
+    }
+    if (
+      typeof req.body.password === "string" &&
+      req.body.password.trim().length > 0
+    ) {
+      allowed.password = await bcrypt.hash(req.body.password, 12);
+    }
+
+    // if username is changed, ensure uniqueness
+    if (allowed.username) {
+      const existing = await Employeelogin.findOne({
+        username: allowed.username,
+        _id: { $ne: id },
+      });
+      if (existing) {
+        return res.status(409).json({ message: "Username already in use" });
+      }
+    }
+
+    await Employeelogin.findByIdAndUpdate(id, { $set: allowed });
 
     return res.status(200).send({ message: "employee Updated Successfully!" });
   } catch (error) {
@@ -77,7 +104,7 @@ const UpdateEmployeeLogin = async (req, res) => {
 const listEmployeeLoginById = async (req, res) => {
   try {
     const { id } = req.params;
-    const employee = await Employeelogin.findById(id);
+    const employee = await Employeelogin.findById(id).select("-password");
 
     return res.status(200).json(employee);
   } catch (error) {

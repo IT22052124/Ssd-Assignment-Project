@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Notifications from "./Header/notifications";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { EmployeeAuthContext } from "../context/EmployeeAuthContext";
 
 const Header = () => {
+  const navigate = useNavigate();
+  const { avatarUrl } = useContext(EmployeeAuthContext);
   const [clickNotification, setClickNotification] = useState(false);
   const [notify, setNotify] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -13,14 +17,13 @@ const Header = () => {
     axios
       .put("http://localhost:5000/notify/mark-as-seen")
       .then((res) => {
-        setNewNotifyCount(0)
+        setNewNotifyCount(0);
         setLoading(false);
       })
       .catch((err) => {
         console.error(err);
         setLoading(true);
       });
-    
   };
 
   useEffect(() => {
@@ -29,9 +32,10 @@ const Header = () => {
       .get("http://localhost:5000/notify/")
       .then((res) => {
         setNotify(res.data);
-        setNewNotifyCount(res.data.filter(
-          (notification) => notification.seen === "Pending"
-        ).length);
+        setNewNotifyCount(
+          res.data.filter((notification) => notification.seen === "Pending")
+            .length
+        );
         setLoading(false);
       })
       .catch((err) => {
@@ -44,7 +48,7 @@ const Header = () => {
     <>
       <nav
         className="fixed ml-64 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700"
-        style={{ backgroundColor: "white" , width: "84%" }}
+        style={{ backgroundColor: "white", width: "84%" }}
       >
         <div className="px-3 py-3 lg:px-5 lg:pl-3">
           <div className="flex items-center justify-between">
@@ -68,17 +72,17 @@ const Header = () => {
                 >
                   <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path>
                 </svg>
-                {newNotifyCount > 0 && newNotifyCount < 10 &&(
+                {newNotifyCount > 0 && newNotifyCount < 10 && (
                   <span className="absolute inset-0 object-right-top top-0 p-5">
                     <div className="inline-flex items-center px-1.5 py-0.5 border-2 pl- border-white rounded-full text-xs font-semibold leading-4 bg-red-500 text-white">
-                    {newNotifyCount}
+                      {newNotifyCount}
                     </div>
                   </span>
                 )}
-                {newNotifyCount > 10 &&(
+                {newNotifyCount > 10 && (
                   <span className="absolute inset-0 object-right-top top-0 p-5">
                     <div className="inline-flex items-center px-1.5 py-0.5 border-2 pl- border-white rounded-full text-xs font-semibold leading-4 bg-red-500 text-white">
-                    9⁺
+                      9⁺
                     </div>
                   </span>
                 )}
@@ -147,11 +151,15 @@ const Header = () => {
                     id="user-menu-button-2"
                     aria-expanded="false"
                     data-dropdown-toggle="dropdown-2"
+                    onClick={() => navigate("/profile")}
                   >
                     <span className="sr-only">Open user menu</span>
                     <img
                       className="w-8 h-8 rounded-full"
-                      src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                      src={
+                        avatarUrl ||
+                        "https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                      }
                       alt="user photo"
                     />
                   </button>

@@ -24,6 +24,7 @@ const ProductReviewRoute = require("./Routes/ProductReviewRoute");
 const FaqRoute = require("./Routes/FaqRoute");
 const InquiryRoute = require("./Routes/InquiryRoute");
 const app = express();
+const sanitize = require("./middleware/sanitize");
 const DeliveryLoginRoute = require("./Routes/DeliveryLoginRoute");
 const DeliveryPersonLoginRoute = require("./Routes/DeliveryLoginpRoute");
 const ProfitRoute = require("./Routes/ProfitRoute");
@@ -36,10 +37,10 @@ const InvoiceRoute = require("./Routes/InvoiceRoute");
 const EmployeeGoogleAuthRoute = require("./Routes/EmployeeGoogleAuthRoute");
 const EmployeeGoogleSignupRoute = require("./Routes/EmployeeGoogleSignupRoute");
 
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(sanitize);
 app.use(
   cors({
     origin: "http://localhost:3000",

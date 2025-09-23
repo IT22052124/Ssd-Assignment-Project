@@ -4,15 +4,22 @@ const EmployeeLoginModel = require("../Models/EmployeeLoginModel");
 
 const EmployeeLogin = async (req, res) => {
   const { username, password } = req.body;
+  if (
+    typeof username !== "string" ||
+    typeof password !== "string" ||
+    !username.trim() ||
+    !password.trim()
+  ) {
+    return res.status(400).json("Username and password are required");
+  }
   try {
     const employee = await EmployeeLoginModel.findOne({ username: username });
     let passOk = false;
     if (employee) {
-      // Prefer bcrypt compare; fallback to plain-text equality for legacy records
       try {
         passOk = await bcrypt.compare(password, employee.password);
       } catch (e) {
-        passOk = employee.password === password;
+        passOk = false;
       }
     }
     if (employee && passOk) {
@@ -21,11 +28,13 @@ const EmployeeLogin = async (req, res) => {
         res.json({
           message: "cashier",
           employeeId: employee._id,
+          avatarUrl: employee.avatarUrl || null,
         });
       } else {
         res.json({
           message: "admin",
           employeeId: employee._id,
+          avatarUrl: employee.avatarUrl || null,
         });
       }
     } else {
