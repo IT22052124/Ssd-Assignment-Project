@@ -1,5 +1,3 @@
-const Model = require(`../Models/${model}`);
-
 module.exports = function checkOwnership(options) {
   return async (req, res, next) => {
     try {
@@ -10,6 +8,7 @@ module.exports = function checkOwnership(options) {
         return res.status(400).json({ message: "Resource ID not provided" });
       }
 
+      const Model = require(`../Models/${model}`);
       let userId;
       if (req.customer) {
         userId = req.customer.id;
