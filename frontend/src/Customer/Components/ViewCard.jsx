@@ -1,63 +1,69 @@
 import * as React from "react";
-import { useEffect } from 'react';
+import { useEffect } from "react";
 import "./ViewCard.css";
 import Loader from "../../Shared/Components/UiElements/Loader";
 import { Link } from "react-router-dom";
 
 const ViewCard = (props) => {
-  return (
-    props.loading1 ? (
-      <center>
-        <Loader />
-      </center>
-    ) : (
-      <div className="max-w-screen-md mx-auto flex justify-center items-center">
-        <div className="card_sample pt-32">
-          <div className="e-card e-custom-card relative mx-auto overflow-visible border rounded-lg shadow-md transition duration-200 border-gray-300 hover:border-indigo-500">
-            <div className="e-card-header text-center">
-              <div className="flex justify-center">
-                <div className="e-avatar-circle e-avatar-md flex items-center justify-center">
-                  <img
-                    className="rounded-full w-24 h-24"
-                    src={`http://localhost:5000/${props.customer.image}`}
-                    alt="profile_pic"
-                  />
-                </div>
-              </div>
-              &nbsp;
-            </div>
-            <div className="e-card-header">
-              <div className="e-card-header-caption center">
-                <div className="e-card-header-title name text-lg font-semibold">
-                  {props.customer.name}
-                </div>
-                <div className="e-card-sub-title text-sm"></div>
-              </div>
-            </div>
-            <div className="e-card-content">
-              <p className="avatar-content">
-                Name: {props.customer.name}
-              </p>
-              <p className="avatar-content">
-                Telephone: {props.customer.telephone}
-              </p>
-              <p className="avatar-content">
-                Email: {props.customer.mail}
-              </p>
-              <p className="avatar-content">
-                Address: {props.customer.address}
-              </p>
-            </div>
-            <Link
-                to={`/Customer/update/`+ props.customer._id}
-                class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white rounded-full text-center"
-              >
-                Update
-              </Link>
-          </div>
+  return props.loading1 ? (
+    <center>
+      <Loader />
+    </center>
+  ) : (
+    <div className="max-w-lg mx-auto flex justify-center items-center py-16">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 w-full">
+        {/* Profile Image */}
+        <div className="flex flex-col items-center p-6 border-b border-gray-100">
+          <img
+            className="w-28 h-28 rounded-full shadow-md object-cover"
+            src={
+              props.customer?.image?.startsWith("http")
+                ? props.customer.image
+                : `http://localhost:5000/${props.customer.image}`
+            }
+            alt="profile_pic"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src =
+                "https://flowbite.com/docs/images/people/profile-picture-5.jpg";
+            }}
+          />
+          <h2 className="mt-4 text-xl font-semibold text-gray-800">
+            {props.customer.name}
+          </h2>
+          <p className="text-sm text-gray-500">Customer Profile</p>
+        </div>
+
+        {/* Details */}
+        <div className="p-6 space-y-3">
+          <p className="text-gray-700">
+            <span className="font-medium">Name:</span> {props.customer.name}
+          </p>
+          <p className="text-gray-700">
+            <span className="font-medium">Telephone:</span>{" "}
+            {props.customer.telephone}
+          </p>
+          <p className="text-gray-700">
+            <span className="font-medium">Email:</span> {props.customer.mail}
+          </p>
+          <p className="text-gray-700">
+            <span className="font-medium">Address:</span>{" "}
+            {props.customer.address}
+          </p>
+        </div>
+
+        {/* Update Button */}
+        <div className="px-6 pb-6">
+          <Link
+            to={`/Customer/update/` + props.customer._id}
+            className="block w-full py-2 text-center text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition duration-200"
+          >
+            Update
+          </Link>
         </div>
       </div>
-    )
+    </div>
   );
 };
+
 export default ViewCard;

@@ -33,18 +33,19 @@ const ViewCustomer = () => {
 
     return (
       <>
-        <div className='flex'>
+        
           
             <CustomerHeader/>
         
-          <div className='flex-1 w-64 ...'>
+        <div className='align-items-center justify-center text-center my-8'>
+         
           <ViewCard
             customer = {customer}
             loading1 = {loading1}
             setloading1 = {setLoading1}
           />
-        </div>  
-        </div>
+          </div>
+     
       </>
     );
 }

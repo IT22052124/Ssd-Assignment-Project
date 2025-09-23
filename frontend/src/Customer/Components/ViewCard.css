@@ -1,5 +1,4 @@
-
-.sample_container.card_sample .e-custom-card {
+.card_sample .e-custom-card {
     position: relative;
     margin-top: 80px;
     overflow: visible;
@@ -35,17 +34,18 @@ body.tailwind-dark .e-custom-card .e-avatar,
     margin-top: 5px;
 }
 
-.sample_container p.avatar-content {
+.card_sample p.avatar-content,
+.avatar-content {
     line-height: 20px;
     font-family: inherit;
     padding-left: 10px; /* Adjust the padding as needed */
 }
 
-.sample_container.card_sample .e-custom-card .e-card-header {
+.card_sample .e-custom-card .e-card-header {
     text-align: center;
 }
 
-.sample_container.card_sample .e-custom-card .e-avatar {
+.card_sample .e-custom-card .e-avatar {
     font-size: 40px;
     position: absolute;
     top: calc(0% - 1.5em);
@@ -53,12 +53,9 @@ body.tailwind-dark .e-custom-card .e-avatar,
     box-shadow: 0 16px 28px -8px rgba(0, 0, 0, .36), 0 4px 15px 0 rgba(0, 0, 0, .12), 0 8px 10px -5px rgba(0, 0, 0, .2);
 }
 
-.sample_container.card_sample .e-card.e-custom-card :nth-child() {
-    padding: 12px 0px 20px 0px;
-    height: 130px;
-}
+/* removed invalid :nth-child() selector */
 
-.sample_container.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title {
+.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title {
     font-size: 24px;
     font-weight: 500;
     line-height: normal;
@@ -67,7 +64,7 @@ body.tailwind-dark .e-custom-card .e-avatar,
     padding-bottom: 20px;
 }
 
-.sample_container.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title {
+.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title {
     font-size: 12px;
     font-weight: 500;
     line-height: normal;
@@ -75,14 +72,14 @@ body.tailwind-dark .e-custom-card .e-avatar,
     text-shadow: 0 0 0.1px;
 }
 
-.sample_container.card_sample .e-custom-card.e-card .e-card-content {
+.card_sample .e-custom-card.e-card .e-card-content {
     overflow: visible;
     width: auto;
     margin: -5px 20px 0 20px;
     word-spacing: 1px;
 }
 
-.sample_container.card_sample .avatar-content {
+.card_sample .avatar-content {
     color: rgba(250, 200, 130, 0.6);
     margin: 0 auto;
     text-align: left;
@@ -98,7 +95,7 @@ body.tailwind-dark .e-custom-card .e-avatar,
     margin-bottom: 0;
 }
 
-.sample_container.card_sample .sample_container .name {
+.card_sample .name {
     margin-top: 10px;
 }
 
@@ -113,25 +110,25 @@ body.tailwind-dark .e-custom-card .e-avatar,
     color: rgba(255, 255, 255, 0.84);
 }
 
-.highcontrast .sample_container.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
-.bootstrap-dark .sample_container.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
-.tailwind-dark .sample_container.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
-.material-dark .sample_container.card_sample  .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
-.material3-dark .sample_container.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
-.fluent-dark .sample_container.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
-.fabric-dark .sample_container.card_sample  .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
-.bootstrap5-dark .sample_container.card_sample  .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title {
+.highcontrast .card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
+.bootstrap-dark .card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
+.tailwind-dark .card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
+.material-dark .card_sample  .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
+.material3-dark .card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
+.fluent-dark .card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
+.fabric-dark .card_sample  .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title,
+.bootstrap5-dark .card_sample  .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-sub-title {
     color: rgba(255, 255, 255, 0.45);
 }
 
-.highcontrast .sample_container.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title,
-.bootstrap-dark .sample_container.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title,
-.tailwind-dark .sample_container.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title,
-.material-dark .sample_container.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title,
+.highcontrast .card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title,
+.bootstrap-dark .card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title,
+.tailwind-dark .card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title,
+.material-dark .card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title,
 .material3-dark .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title,
 .fluent-dark .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title,
-.fabric-dark .sample_container.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title,
-.bootstrap5-dark .sample_container.card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title {
+.fabric-dark .card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title,
+.bootstrap5-dark .card_sample .e-custom-card.e-card .e-card-header .e-card-header-caption .e-card-header-title {
     color: rgba(255, 255, 255, 0.84);
 }
 
