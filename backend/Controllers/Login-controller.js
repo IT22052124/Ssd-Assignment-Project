@@ -12,9 +12,23 @@ const signCustomerToken = (cust) => {
 
 const CustomerLogin = async (req, res) => {
   const { mail, password } = req.body;
-  Customer.findOne({ mail: mail }).then(async (user) => {
-    if (user) {
-      let passOk = false;
+  try {
+    const user = await Customer.findOne({ mail: mail });
+
+    if (!user) {
+      return res.status(401).json({
+        error: "Invalid email or password",
+      });
+    }
+
+    let passOk = false;
+    try {
+      passOk = await bcrypt.compare(password, user.password);
+    } catch (e) {
+      passOk = false;
+    }
+
+    if (passOk) {
       try {
         passOk = await bcrypt.compare(password, user.password);
       } catch (e) {
@@ -32,20 +46,34 @@ const CustomerLogin = async (req, res) => {
         } catch (e) {
           console.error("Failed to set auth cookie:", e?.message || e);
         }
+        try {
         const { password: _pw, ...safeUser } = user.toObject
           ? user.toObject()
           : user;
-        res.json({
+
+        return res.status(200).json({
           message: "Success",
           user: safeUser,
+          token: token, // Include token in response
         });
-      } else {
-        res.json("The password is incorrect");
+      } catch (e) {
+        console.error("Failed to set auth cookie:", e?.message || e);
+        return res.status(500).json({
+          error: "Authentication error",
+        });
       }
     } else {
-      res.json("No record exsisted");
+      return res.status(401).json({
+        error: "Invalid email or password",
+      });
     }
-  });
+  }
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({
+      error: "Server error, please try again later",
+    });
+  }
 };
 
 const CustomerLogout = (req, res) => {

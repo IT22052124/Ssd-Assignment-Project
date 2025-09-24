@@ -4,7 +4,6 @@ const { googleEmployeeSignup } = require("../Controllers/EmployeeGoogleAuthContr
 
 const Router = express.Router();
 
-// Throttle to prevent abuse (10 reqs/min/IP)
 const limiter = rateLimit({
   windowMs: 60 * 1000,
   max: 10,

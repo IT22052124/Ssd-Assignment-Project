@@ -1,9 +1,15 @@
-import React, { useContext, useRef, useState, useEffect } from "react";
+import React, {
+  useContext,
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import axios from "axios";
 import { withCsrf } from "../utils/csrf";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../Shared/Components/context/authcontext";
-import { Input, Checkbox, Button, Typography } from "@material-tailwind/react";
+import { Input, Button, Typography } from "@material-tailwind/react";
 import Toast from "../Shared/Components/UiElements/Toast/Toast";
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
@@ -15,41 +21,46 @@ export const LoginPage = () => {
   const navigate = useNavigate();
   const googleBtnRef = useRef(null);
 
-  const handleGoogleCredential = async (response) => {
-    try {
-      const idToken = response.credential;
-      const res = await withCsrf(
-        axios.post,
-        "http://localhost:5000/auth/google/customer",
-        { idToken },
-        { withCredentials: true }
-      );
-      if (res.data?.message === "Success" && res.data?.user?._id) {
-        auth.login(res.data.user._id);
-        Toast("Signed in with Google ✅", "success");
-        navigate("/Products");
-      } else {
-        Toast("Google sign-in failed. Try email/password or sign up.", "error");
-      }
-    } catch (err) {
-      console.error(err);
-      const status = err?.response?.status;
-      const msg = err?.response?.data?.message || "";
-      if (status === 401 && /customer not found/i.test(msg)) {
-        Toast(
-          "No account found for this Google email. Please sign up.",
-          "warning"
+  const handleGoogleCredential = useCallback(
+    async (response) => {
+      try {
+        const idToken = response.credential;
+        const res = await withCsrf(
+          axios.post,
+          "http://localhost:5000/auth/google/customer",
+          { idToken },
+          { withCredentials: true }
         );
-      } else if (status === 401 && /invalid google token/i.test(msg)) {
-        Toast("Invalid Google sign-in. Please try again.", "error");
-      } else {
-        Toast(
-          "Google sign-in failed. Try again or use email/password.",
-          "error"
-        );
+        if (res.data?.message === "Success" && res.data?.user?._id) {
+          auth.login(res.data.user._id);
+          Toast("Signed in with Google ✅", "success");
+          navigate("/Products");
+        } else {
+          Toast(
+            "Google sign-in failed. Try email/password or sign up.",
+            "error"
+          );
+        }
+      } catch (err) {
+        console.error(err);
+        const status = err?.response?.status;
+        const msg = err?.response?.data?.message || "";
+        if (status === 401 && /customer not found/i.test(msg)) {
+          Toast(
+            "No account found for this Google email. Please sign up.",
+            "warning"
+          );
+        } else if (status === 401 && /invalid google token/i.test(msg)) {
+          Toast("Invalid Google sign-in. Please try again.", "error");
+        } else {
+          Toast(
+            "Google sign-in failed. Try again or use email/password.",
+            "error"
+          );
+        }
       }
     }
-  };
+  );
 
   useEffect(() => {
     if (!window.google || !GOOGLE_CLIENT_ID) return;
@@ -66,57 +77,69 @@ export const LoginPage = () => {
         width: 320,
       });
     }
-  }, []);
+  }, [handleGoogleCredential]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await withCsrf(
-        axios.post,
-        "http://localhost:5000/login/",
-        { mail, password },
-        { withCredentials: true }
-      );
-      if (res.data?.message === "Success") {
-        auth.login(res.data.user._id);
-        Toast("Login Successfully !!", "success");
-        navigate("/Products");
-      } else if (typeof res.data === "string") {
-        if (/no record exsisted/i.test(res.data)) {
-          Toast("No account found for this email. Please register.", "warning");
-        } else if (/password is incorrect/i.test(res.data)) {
-          Toast("Incorrect password. Please try again.", "error");
-        } else {
-          Toast("Login failed. Please try again.", "error");
-        }
-      } else if (typeof res.data?.message === "string") {
-        const msg = res.data.message;
-        if (/no record/i.test(msg)) {
-          Toast("No account found for this email. Please register.", "warning");
-        } else if (/password/i.test(msg) && /incorrect/i.test(msg)) {
-          Toast("Incorrect password. Please try again.", "error");
-        } else {
-          Toast(msg, "error");
-        }
-      } else {
-        Toast("Invalid email / password", "error");
+    const res = await withCsrf(
+      axios.post,
+      "http://localhost:5000/login/",
+      { mail, password },
+      { withCredentials: true }
+    );
+    if (res.data.message === "Success") {
+      // Store the token if you need to use it for subsequent API calls
+      if (res.data.token) {
+        localStorage.setItem("customerToken", res.data.token);
       }
-    } catch (err) {
-      console.log(err);
-      const status = err?.response?.status;
-      const data = err?.response?.data;
-      const msg = (typeof data === "string" ? data : data?.message) || "";
+      auth.login(res.data.user._id);
+      Toast("Login Successfully !!", "success");
+      navigate("/Products");
+    } else if (typeof res.data === "string") {
+      if (/no record exsisted/i.test(res.data)) {
+        Toast("No account found for this email. Please register.", "warning");
+      } else if (/password is incorrect/i.test(res.data)) {
+        Toast("Incorrect password. Please try again.", "error");
+      } else {
+        Toast("Login failed. Please try again.", "error");
+      }
+    } else if (typeof res.data?.message === "string") {
+      const msg = res.data.message;
       if (/no record/i.test(msg)) {
         Toast("No account found for this email. Please register.", "warning");
       } else if (/password/i.test(msg) && /incorrect/i.test(msg)) {
         Toast("Incorrect password. Please try again.", "error");
-      } else if (status === 429) {
-        Toast("Too many attempts. Please wait and try again.", "warning");
+      } else {
+        Toast(msg, "error");
+      }
+    } else {
+      Toast("Invalid email / Password", "error");
+    }
+  } catch (err) {
+    console.log(err);
+
+    // Improved error handling
+    if (err.response) {
+      // The server responded with an error status code
+      if (err.response.status === 401) {
+        Toast("Unauthorized: Invalid email or password", "error");
+      } else if (err.response.status === 429) {
+        Toast("Too many login attempts. Please try again later.", "error");
+      } else if (err.response.data && err.response.data.error) {
+        Toast(err.response.data.error, "error");
       } else {
         Toast("Login failed. Please try again.", "error");
       }
+    } else if (err.request) {
+      // The request was made but no response was received
+      Toast("Server not responding. Please try again later.", "error");
+    } else {
+      // Something happened in setting up the request
+      Toast("An error occurred. Please try again.", "error");
     }
-  };
+  }
+};
 
   return (
     <div
@@ -207,6 +230,7 @@ export const LoginPage = () => {
           <img
             src="/img/items.jpg"
             className="h-full w-full object-cover rounded-3xl"
+            alt="Shop items display"
           />
         </div>
       </section>

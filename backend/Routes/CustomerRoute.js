@@ -6,7 +6,6 @@ const fileupload = require("../middleware/file-upload");
 const authEmployee = require("../middleware/authEmployee");
 const authorize = require("../middleware/authorize");
 
-
 Router.post(
   "/",
   fileupload.single("image"),
