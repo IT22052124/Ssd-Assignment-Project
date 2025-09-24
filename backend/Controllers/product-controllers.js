@@ -5,6 +5,7 @@ const Order = require("../Models/OrderModel");
 const ProductReviews = require("../Models/ProductReview");
 const moment = require("moment");
 const Invoice = require("../Models/InvoiceModel");
+const mongoose = require("mongoose");
 
 const createProduct = async (req, res, next) => {
   const { name, category, Alert_quantity, price, weight, description } =
@@ -49,8 +50,11 @@ const listProduct = async (req, res) => {
 };
 const listProductById = async (req, res) => {
   try {
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
     const product = await Product.findById(req.params.id);
-
     return res.status(200).json(product);
   } catch (error) {
     console.log(error.message);
@@ -73,9 +77,14 @@ const listRestockProduct = async (req, res) => {
 const UpdateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
     const product = await Product.findById(id);
-
+    if (!product) {
+      return res.status(404).send({ message: "Product Not Find !" });
+    }
     let path = product.image;
     if (req.file && req.file.path) {
       if (path !== "uploads/images/No-Image-Placeholder.png") {
@@ -85,12 +94,8 @@ const UpdateProduct = async (req, res) => {
       }
       path = req.file.path;
     }
-
-    const { name, category, weight, description, Alert_quantity, Stock } =
-      req.body;
-
+    const { name, category, weight, description, Alert_quantity, Stock } = req.body;
     if (req.file && req.file.path) path = req.file.path;
-
     const Updateproduct = {
       name: name,
       category: category,
@@ -100,13 +105,10 @@ const UpdateProduct = async (req, res) => {
       Stock: Stock,
       image: path,
     };
-
     const result = await Product.findByIdAndUpdate(id, Updateproduct);
-
     if (!result) {
       return res.status(404).send({ message: "Product Not Find !" });
     }
-
     return res.status(200).send({ message: "Product Updated Successfully!" });
   } catch (error) {
     console.log(error.message);
@@ -117,8 +119,12 @@ const UpdateProduct = async (req, res) => {
 const UpdateProductPriceQtyndStock = async (req, res) => {
   try {
     const { id } = req.params;
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
+    // Optionally, validate req.body fields here
     const result = await Product.findByIdAndUpdate(id, req.body);
-
     if (!result) {
       return res.status(404).send({ message: "Product Not Find !" });
     }
@@ -132,8 +138,14 @@ const UpdateProductPriceQtyndStock = async (req, res) => {
 const DeleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
     const product = await Product.findById(id);
-
+    if (!product) {
+      return res.status(404).send({ message: "Product Not Find !" });
+    }
     await supplierproduct.deleteMany({ product: id });
     const path = product.image;
     if (path !== "uploads/images/No-Image-Placeholder.png") {
@@ -142,11 +154,9 @@ const DeleteProduct = async (req, res) => {
       });
     }
     const result = await Product.findByIdAndDelete(id);
-
     if (!result) {
       return res.status(404).send({ message: "Product Not Find !" });
     }
-
     return res.status(200).send({ message: "Product Deleted Successfully!" });
   } catch (error) {
     console.log(error.message);

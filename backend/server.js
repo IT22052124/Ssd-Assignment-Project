@@ -40,7 +40,10 @@ const EmployeeGoogleAuthRoute = require("./Routes/EmployeeGoogleAuthRoute");
 const EmployeeGoogleSignupRoute = require("./Routes/EmployeeGoogleSignupRoute");
 const CustomerGoogleAuthRoute = require("./Routes/CustomerGoogleAuthRoute");
 const CustomerGoogleSignupRoute = require("./Routes/CustomerGoogleSignupRoute");
+
 const { apiRateLimiter } = require("./utils/rateLimiter");
+const csrfProtection = require("./middleware/csrf");
+
 
 
 app.use(express.json());
@@ -53,9 +56,17 @@ app.use(
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
   })
 );
+
+// CSRF protection for all state-changing requests
+app.use(csrfProtection);
+
+// Route to provide CSRF token to frontend
+app.get("/csrf-token", (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
 
 // Import and apply API rate limiter to all routes
 app.use(apiRateLimiter);

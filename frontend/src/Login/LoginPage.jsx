@@ -1,5 +1,6 @@
 import React, { useContext, useRef, useState, useEffect } from "react";
 import axios from "axios";
+import { withCsrf } from "../utils/csrf";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../Shared/Components/context/authcontext";
 import { Input, Checkbox, Button, Typography } from "@material-tailwind/react";
@@ -17,9 +18,11 @@ export const LoginPage = () => {
   const handleGoogleCredential = async (response) => {
     try {
       const idToken = response.credential;
-      const res = await axios.post(
+      const res = await withCsrf(
+        axios.post,
         "http://localhost:5000/auth/google/customer",
-        { idToken }
+        { idToken },
+        { withCredentials: true }
       );
       if (res.data?.message === "Success" && res.data?.user?._id) {
         auth.login(res.data.user._id);
@@ -51,23 +54,26 @@ export const LoginPage = () => {
     }
   }, []);
 
-  const handleSubmit = (e) => {
-    console.log(mail, password);
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    axios
-      .post("http://localhost:5000/login/", { mail, password })
-      .then((res) => {
-        console.log(res);
-        if (res.data.message === "Success") {
-          auth.login(res.data.user._id);
-          console.log(res.data.user);
-          Toast("Login Successfully !!", "success");
-          navigate("/Products");
-        } else {
-          Toast("Invalid mail / Password", "error");
-        }
-      })
-      .catch((err) => console.log(err));
+    try {
+      const res = await withCsrf(
+        axios.post,
+        "http://localhost:5000/login/",
+        { mail, password },
+        { withCredentials: true }
+      );
+      if (res.data.message === "Success") {
+        auth.login(res.data.user._id);
+        Toast("Login Successfully !!", "success");
+        navigate("/Products");
+      } else {
+        Toast("Invalid mail / Password", "error");
+      }
+    } catch (err) {
+      console.log(err);
+      Toast("Login failed. Please try again.", "error");
+    }
   };
 
   return (
