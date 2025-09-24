@@ -28,67 +28,58 @@ const Category = [
 
 const ProductForm = () => {
   const navigate = useNavigate();
-
   const [loading, setLoading] = useState(false);
   const [formState, inputHandler] = useForm(
     {
-      name: {
-        value: "",
-        isValid: false,
-      },
-      description: {
-        value: "",
-        isValid: false,
-      },
-      category: {
-        value: "",
-        isValid: false,
-      },
-      price: {
-        value: "",
-        isValid: false,
-      },
-      weight: {
-        value: "",
-        isValid: false,
-      },
-      Alert_quantity: {
-        value: "",
-        isValid: false,
-      },
-      image: {
-        value: null,
-        isValid: true,
-      },
+      name: { value: "", isValid: false },
+      description: { value: "", isValid: false },
+      category: { value: "", isValid: false },
+      price: { value: "", isValid: false },
+      weight: { value: "", isValid: false },
+      Alert_quantity: { value: "", isValid: false },
+      image: { value: null, isValid: true },
     },
     false
   );
+  // For error message
+  const [error, setError] = useState("");
+
+  // Helper to reset image input
+  const resetImageInput = () => {
+    inputHandler("image", null, false);
+    // Optionally, force a re-render or use a ref to clear the file input if needed
+  };
 
   const submitHandler = async (event) => {
     event.preventDefault();
     setLoading(true);
-    console.log(formState.inputs)
+    setError("");
     const formData = new FormData();
-    formData.append('name',formState.inputs.name.value);
-    formData.append('description',formState.inputs.description.value);
-    formData.append('category',formState.inputs.category.value);
-    formData.append('price',formState.inputs.price.value);
-    formData.append('weight',formState.inputs.weight.value);
-    formData.append('Alert_quantity',formState.inputs.Alert_quantity.value);
-    formData.append('image',formState.inputs.image.value);
+    formData.append("name", formState.inputs.name.value);
+    formData.append("description", formState.inputs.description.value);
+    formData.append("category", formState.inputs.category.value);
+    formData.append("price", formState.inputs.price.value);
+    formData.append("weight", formState.inputs.weight.value);
+    formData.append("Alert_quantity", formState.inputs.Alert_quantity.value);
+    formData.append("image", formState.inputs.image.value);
 
     axios
       .post("http://localhost:5000/product/new", formData)
       .then((res) => {
         setLoading(false);
-        Toast("Product Added Successfully!! 🔥","success")
+        Toast("Product Added Successfully!! 🔥", "success");
         navigate("/Product/");
       })
       .catch((err) => {
-        console.error(err);
         setLoading(false);
+        let msg = "Something went wrong. Please try again.";
+        if (err.response && err.response.data && err.response.data.message) {
+          msg = err.response.data.message;
+        }
+        Toast(msg, "error");
+        setError(msg);
+        resetImageInput();
       });
-    console.log(formState);
   };
 
   return (
@@ -100,15 +91,18 @@ const ProductForm = () => {
           <div class="min-h-full px-6 py-10 bg-gray-100 flex items-center justify-center">
             <div class="container mx-auto">
               <div>
-                <h2 class="font-semibold text-xl text-gray-600 text-center">Add Product</h2>
-                <p class="text-gray-500 mb-6 text-center">Enter Product details below !!</p>
+                <h2 class="font-semibold text-xl text-gray-600 text-center">
+                  Add Product
+                </h2>
+                <p class="text-gray-500 mb-6 text-center">
+                  Enter Product details below !!
+                </p>
                 <div class="bg-white rounded shadow-lg p-4 px-4 md:p-8 mb-6">
                   <div class="grid gap-4 gap-y-2 text-sm grid-cols-1 lg:grid-cols-3">
                     <div class="text-gray-600 flex justify-center items-center">
                       <ImageUpload center id="image" onInput={inputHandler} />
                     </div>
                     <div class="lg:col-span-2">
-                      
                       <div class="grid gap-4 gap-y-2 text-sm grid-cols-1 md:grid-cols-5">
                         <div class="md:col-span-5">
                           <Input
@@ -137,7 +131,7 @@ const ProductForm = () => {
                             errorText="Please Enter a Description (5 - 250 letters)"
                             onInput={inputHandler}
                             initialValue="No Description Available !!"
-                            initialValid= {true}
+                            initialValid={true}
                           />
                         </div>
                         <div class="md:col-span-3">

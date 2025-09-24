@@ -43,9 +43,7 @@ const City = [
   { value: "Vavuniya" },
 ];
 
-
 const SupplierForm = () => {
-
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
@@ -79,28 +77,44 @@ const SupplierForm = () => {
     false
   );
 
+  // For error message
+  const [error, setError] = useState("");
+
+  // Helper to reset image input
+  const resetImageInput = () => {
+    inputHandler("image", null, false);
+    // Optionally, force a re-render or use a ref to clear the file input if needed
+  };
+
   const submitHandler = async (event) => {
     event.preventDefault();
     setLoading(true);
+    setError("");
 
     const formData = new FormData();
-    formData.append('name',formState.inputs.name.value);
-    formData.append('telephone',formState.inputs.telephone.value);
-    formData.append('mail',formState.inputs.mail.value);
-    formData.append('address',formState.inputs.address.value);
-    formData.append('city',formState.inputs.city.value);
-    formData.append('image',formState.inputs.image.value);
+    formData.append("name", formState.inputs.name.value);
+    formData.append("telephone", formState.inputs.telephone.value);
+    formData.append("mail", formState.inputs.mail.value);
+    formData.append("address", formState.inputs.address.value);
+    formData.append("city", formState.inputs.city.value);
+    formData.append("image", formState.inputs.image.value);
 
     axios
       .post("http://localhost:5000/supplier/", formData)
       .then((res) => {
         setLoading(false);
-        Toast("Supplier Added Successfully!! 🔥","success")
+        Toast("Supplier Added Successfully!! 🔥", "success");
         navigate("/Supplier/");
       })
       .catch((err) => {
-        console.error(err);
         setLoading(false);
+        let msg = "Something went wrong. Please try again.";
+        if (err.response && err.response.data && err.response.data.message) {
+          msg = err.response.data.message;
+        }
+        Toast(msg, "error");
+        setError(msg);
+        resetImageInput();
       });
   };
 
@@ -110,18 +124,21 @@ const SupplierForm = () => {
         <Loader />
       ) : (
         <>
-        <div class="min-h-full px-6 py-10 bg-gray-100 flex items-center justify-center">
+          <div class="min-h-full px-6 py-10 bg-gray-100 flex items-center justify-center">
             <div class="container mx-auto">
               <div>
-                <h2 class="font-semibold text-xl text-gray-600 text-center">Add Supplier</h2>
-                <p class="text-gray-500 mb-6 text-center">Enter Supplier details below !!</p>
+                <h2 class="font-semibold text-xl text-gray-600 text-center">
+                  Add Supplier
+                </h2>
+                <p class="text-gray-500 mb-6 text-center">
+                  Enter Supplier details below !!
+                </p>
                 <div class="bg-white rounded shadow-lg p-4 px-4 md:p-8 mb-6">
                   <div class="grid gap-4 gap-y-2 text-sm grid-cols-1 lg:grid-cols-3">
                     <div class="text-gray-600 flex justify-center items-center">
                       <ImageUpload center id="image" onInput={inputHandler} />
                     </div>
                     <div class="lg:col-span-2">
-                      
                       <div class="grid gap-4 gap-y-2 text-sm grid-cols-1 md:grid-cols-5">
                         <div class="md:col-span-5">
                           <Input

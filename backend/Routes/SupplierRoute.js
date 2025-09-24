@@ -6,16 +6,11 @@ const fileupload = require("../middleware/file-upload");
 Router.post(
   "/",
   fileupload.single("image"),
-  SupplierControllers.createSupplier
-);
-Router.post(
-  "/",
-  fileupload.single("image"),
   fileupload.checkMagic,
   SupplierControllers.createSupplier
 );
 Router.put(
-  ":id",
+  "/:id",
   fileupload.single("image"),
   fileupload.checkMagic,
   SupplierControllers.UpdateSupplier
@@ -23,11 +18,7 @@ Router.put(
 Router.get("/", SupplierControllers.listSupplier);
 Router.delete("/:id", SupplierControllers.DeleteSupplier);
 Router.get("/:id", SupplierControllers.listSupplierById);
-Router.put(
-  "/:id",
-  fileupload.single("image"),
-  SupplierControllers.UpdateSupplier
-);
+// ...existing code...
 Router.put("/updateCredit/:id", SupplierControllers.UpdateSupplierCredit);
 
 module.exports = Router;

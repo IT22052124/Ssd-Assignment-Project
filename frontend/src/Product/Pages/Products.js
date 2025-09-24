@@ -23,7 +23,7 @@ const Products = () => {
     axios
       .get("http://localhost:5000/product")
       .then((res) => {
-        setProducts(res.data);
+        setProducts(res.data.data);
         setLoading(false);
       })
       .catch((err) => {
