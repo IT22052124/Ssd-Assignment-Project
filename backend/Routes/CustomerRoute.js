@@ -9,6 +9,12 @@ Router.post(
   fileupload.single("image"),
   CustomerControllers.createCustomer
 );
+Router.post(
+  "/",
+  fileupload.single("image"),
+  fileupload.checkMagic,
+  CustomerControllers.createCustomer
+);
 Router.get("/", CustomerControllers.listCustomer);
 Router.delete("/:id", authCustomer, CustomerControllers.DeleteCustomer);
 Router.get("/:id", authCustomer, CustomerControllers.listCustomerById);
