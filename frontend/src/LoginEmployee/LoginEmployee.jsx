@@ -82,11 +82,9 @@ export const EmployeeLoginPage = () => {
       })
       .catch((error) => {
         console.log(error);
-        // Improved error handling
         if (error.response) {
-          // The server responded with an error status code
           if (error.response.status === 401) {
-            Toast("Unauthorized: Invalid username or password", "error");
+            Toast("Invalid username or password", "error");
           } else if (error.response.status === 429) {
             Toast("Too many login attempts. Please try again later.", "error");
           } else if (error.response.data && error.response.data.error) {

@@ -4,15 +4,14 @@ const createRateLimiter = (windowMs, max, message) => {
   return rateLimit({
     windowMs,
     max,
-    message: message, // This allows us to pass a custom response object
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    message: message, 
+    standardHeaders: true, 
+    legacyHeaders: false, 
     // Store to track failed attempts by IP address
-    skipSuccessfulRequests: true, // Only count failed requests
+    skipSuccessfulRequests: true, 
   });
 };
 
-// Specific rate limiters
 const loginRateLimiter = createRateLimiter(
   15 * 60 * 1000, // 15 minutes window
   5, // 5 attempts per window
@@ -26,7 +25,20 @@ const apiRateLimiter = createRateLimiter(
   "Too many requests, please try again later"
 );
 
+const customLoginRateLimiter = (req, res, next) => {
+  loginRateLimiter(req, res, (err) => {
+    if (err) {
+      return res.status(429).json({
+        error: true,
+        message: "Too many login attempts, please try again after 15 minutes",
+      });
+    }
+    next();
+  });
+};
+
 module.exports = {
   loginRateLimiter,
   apiRateLimiter,
+  customLoginRateLimiter,
 };
