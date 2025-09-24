@@ -11,6 +11,12 @@ Router.post(
   fileupload.single("image"),
   CustomerControllers.createCustomer
 );
+Router.post(
+  "/",
+  fileupload.single("image"),
+  fileupload.checkMagic,
+  CustomerControllers.createCustomer
+);
 Router.get(
   "/",
   authEmployee,
