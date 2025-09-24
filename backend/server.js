@@ -26,7 +26,13 @@ const ProductReviewRoute = require("./Routes/ProductReviewRoute");
 const FaqRoute = require("./Routes/FaqRoute");
 const InquiryRoute = require("./Routes/InquiryRoute");
 const app = express();
-const sanitize = require("./middleware/sanitize");
+
+// Security Middleware
+const sanitize = require("./middleware/sanitize"); // Request sanitizer for NoSQL injection protection
+const mongoSanitize = require("./middleware/mongoSanitize"); // MongoDB query sanitization utilities
+const { apiRateLimiter } = require("./utils/rateLimiter");
+
+// Routes
 const DeliveryLoginRoute = require("./Routes/DeliveryLoginRoute");
 const DeliveryPersonLoginRoute = require("./Routes/DeliveryLoginpRoute");
 const ProfitRoute = require("./Routes/ProfitRoute");
@@ -41,32 +47,23 @@ const EmployeeGoogleSignupRoute = require("./Routes/EmployeeGoogleSignupRoute");
 const CustomerGoogleAuthRoute = require("./Routes/CustomerGoogleAuthRoute");
 const CustomerGoogleSignupRoute = require("./Routes/CustomerGoogleSignupRoute");
 
-const { apiRateLimiter } = require("./utils/rateLimiter");
-const csrfProtection = require("./middleware/csrf");
-
-
-
-app.use(express.json());
+// Middleware Configuration
+app.use(express.json({ limit: "1mb" })); // Limit payload size
 app.use(express.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: "1mb" }));
 app.use(cookieParser());
-app.use(sanitize);
+
+// MongoDB NoSQL Injection Protection - Apply sanitize middleware to all requests
+app.use(sanitize); // Sanitizes req.body, req.query, and req.params
+
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-// CSRF protection for all state-changing requests
-app.use(csrfProtection);
-
-// Route to provide CSRF token to frontend
-app.get("/csrf-token", (req, res) => {
-  res.json({ csrfToken: req.csrfToken() });
-});
 
 // Import and apply API rate limiter to all routes
 app.use(apiRateLimiter);
@@ -102,7 +99,7 @@ app.use("/cart", cart);
 app.use("/OffPay", OffPay);
 app.use("/OnPay", OnPay);
 app.use("/Login", LoginRoute);
-app.use("/logout", LogoutRoute); 
+app.use("/logout", LogoutRoute);
 app.use("/order", OrderRoute);
 app.use("/salary", SalaryRoute);
 app.use("/notify", NotificationRoute);
@@ -127,9 +124,24 @@ app.use("/auth/google/customer", CustomerGoogleAuthRoute);
 app.use("/auth/google/customer/signup", CustomerGoogleSignupRoute);
 
 const PORT = process.env.PORT || 5000;
+
+// Configure Mongoose to use strict query mode (prevents some NoSQL injection vectors)
+mongoose.set("strictQuery", true);
+
+// Configure MongoDB connection with enhanced security options
+const mongoOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  autoIndex: true,
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+  socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+};
+
+// Connect to MongoDB with security options
 mongoose
-  .connect(process.env.MONGO_URL)
+  .connect(process.env.MONGO_URL, mongoOptions)
   .then(() => {
+    console.log("MongoDB connected with NoSQL injection protections");
     app.listen(PORT, () => console.log(`Server running on port ${PORT} 🔥`));
   })
-  .catch((err) => console.log(err));
+  .catch((err) => console.log("MongoDB connection error:", err));

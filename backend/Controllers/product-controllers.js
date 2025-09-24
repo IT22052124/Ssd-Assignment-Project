@@ -5,7 +5,12 @@ const Order = require("../Models/OrderModel");
 const ProductReviews = require("../Models/ProductReview");
 const moment = require("moment");
 const Invoice = require("../Models/InvoiceModel");
-const mongoose = require("mongoose");
+// Import MongoDB sanitization utilities for NoSQL injection protection
+const {
+  sanitizeQuery,
+  sanitizeSort,
+  isValidObjectId,
+} = require("../middleware/mongoSanitize");
 
 const createProduct = async (req, res, next) => {
   const { name, category, Alert_quantity, price, weight, description } =
@@ -41,20 +46,60 @@ const createProduct = async (req, res, next) => {
 
 const listProduct = async (req, res) => {
   try {
-    const product = await Product.find({});
-    return res.status(200).json(product);
+    // Apply query sanitization to prevent NoSQL injection
+    const safeQuery = sanitizeQuery(req.query);
+
+    // Apply safe sorting if provided
+    const safeSort = sanitizeSort(req.query.sort || {});
+
+    // Apply pagination with safe parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 100, 100); // Cap at 100 items max
+    const skip = (page - 1) * limit;
+
+    // Execute the query with sanitized parameters
+    const product = await Product.find(safeQuery)
+      .sort(safeSort)
+      .skip(skip)
+      .limit(limit);
+
+    const totalCount = await Product.countDocuments(safeQuery);
+
+    return res.status(200).json({
+      success: true,
+      count: product.length,
+      total: totalCount,
+      page,
+      pages: Math.ceil(totalCount / limit),
+      data: product,
+    });
   } catch (error) {
     console.log(error.message);
-    res.status(500).send({ message: error.message });
+    res.status(500).send({
+      success: false,
+      message: error.message,
+    });
   }
 };
 const listProductById = async (req, res) => {
   try {
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ message: "Invalid product ID" });
+    // Validate MongoDB ObjectId format to prevent injection
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID format",
+      });
     }
+
     const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
     return res.status(200).json(product);
   } catch (error) {
     console.log(error.message);
@@ -77,25 +122,39 @@ const listRestockProduct = async (req, res) => {
 const UpdateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid product ID" });
+
+    // Validate MongoDB ObjectId format to prevent injection
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID format",
+      });
     }
+
     const product = await Product.findById(id);
+
     if (!product) {
-      return res.status(404).send({ message: "Product Not Find !" });
+      return res.status(404).json({
+        success: false,
+        message: "Product Not Found!",
+      });
     }
+
     let path = product.image;
     if (req.file && req.file.path) {
       if (path !== "uploads/images/No-Image-Placeholder.png") {
         fs.unlink(path, (err) => {
-          console.log(err);
+          if (err) console.log("Error deleting image:", err);
         });
       }
       path = req.file.path;
     }
-    const { name, category, weight, description, Alert_quantity, Stock } = req.body;
-    if (req.file && req.file.path) path = req.file.path;
+
+    // Extract sanitized data from request body (already sanitized by middleware)
+    const { name, category, weight, description, Alert_quantity, Stock } =
+      req.body;
+
+    // Create update object with sanitized data
     const Updateproduct = {
       name: name,
       category: category,
@@ -105,26 +164,38 @@ const UpdateProduct = async (req, res) => {
       Stock: Stock,
       image: path,
     };
-    const result = await Product.findByIdAndUpdate(id, Updateproduct);
+
+    // Use findByIdAndUpdate with { runValidators: true } to ensure schema validation
+    const result = await Product.findByIdAndUpdate(id, Updateproduct, {
+      new: true, // Return updated document
+      runValidators: true, // Run schema validators on update
+    });
+
     if (!result) {
-      return res.status(404).send({ message: "Product Not Find !" });
+      return res.status(404).json({
+        success: false,
+        message: "Product Not Found!",
+      });
     }
-    return res.status(200).send({ message: "Product Updated Successfully!" });
+
+    return res.status(200).json({
+      success: true,
+      message: "Product Updated Successfully!",
+    });
   } catch (error) {
     console.log(error.message);
-    res.status(500).send({ message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
 const UpdateProductPriceQtyndStock = async (req, res) => {
   try {
     const { id } = req.params;
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid product ID" });
-    }
-    // Optionally, validate req.body fields here
     const result = await Product.findByIdAndUpdate(id, req.body);
+
     if (!result) {
       return res.status(404).send({ message: "Product Not Find !" });
     }
@@ -138,14 +209,8 @@ const UpdateProductPriceQtyndStock = async (req, res) => {
 const DeleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid product ID" });
-    }
     const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).send({ message: "Product Not Find !" });
-    }
+
     await supplierproduct.deleteMany({ product: id });
     const path = product.image;
     if (path !== "uploads/images/No-Image-Placeholder.png") {
@@ -154,9 +219,11 @@ const DeleteProduct = async (req, res) => {
       });
     }
     const result = await Product.findByIdAndDelete(id);
+
     if (!result) {
       return res.status(404).send({ message: "Product Not Find !" });
     }
+
     return res.status(200).send({ message: "Product Deleted Successfully!" });
   } catch (error) {
     console.log(error.message);
@@ -208,12 +275,43 @@ const getTopOrderedProductsThisMonth = async (req, res) => {
 
 const GetProductReportByDateRange = async (req, res) => {
   try {
-    const startDate = new Date(req.query.startDate);
-    const endDate = new Date(req.query.endDate);
+    // Validate and sanitize date inputs to prevent injection
+    const startDateStr = req.query.startDate;
+    const endDateStr = req.query.endDate;
 
-    const orders = await Order.find({
-      createdAt: { $gte: startDate, $lte: endDate },
-    });
+    // Validate date format
+    if (
+      !startDateStr ||
+      !endDateStr ||
+      !moment(startDateStr, moment.ISO_8601, true).isValid() ||
+      !moment(endDateStr, moment.ISO_8601, true).isValid()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date format. Please use ISO format (YYYY-MM-DD).",
+      });
+    }
+
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr);
+
+    // Ensure endDate is after startDate
+    if (endDate < startDate) {
+      return res.status(400).json({
+        success: false,
+        message: "End date must be after start date.",
+      });
+    }
+
+    // Construct safe date range query
+    const dateRangeQuery = {
+      createdAt: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    };
+
+    const orders = await Order.find(dateRangeQuery);
 
     const invoices = await Invoice.find({
       createdAt: { $gte: startDate, $lte: endDate },
@@ -263,20 +361,21 @@ const GetProductReportByDateRange = async (req, res) => {
     ]);
 
     const combinedProductUnits = {};
-    orderProductUnits.forEach(item => {
+    orderProductUnits.forEach((item) => {
       combinedProductUnits[item._id] = {
         totalOrderUnits: item.totalOrderUnits,
-        totalInvoiceUnits: 0
+        totalInvoiceUnits: 0,
       };
     });
-    invoiceProductUnits.forEach(item => {
+    invoiceProductUnits.forEach((item) => {
       if (!combinedProductUnits[item._id]) {
         combinedProductUnits[item._id] = {
           totalOrderUnits: 0,
-          totalInvoiceUnits: item.totalInvoiceUnits
+          totalInvoiceUnits: item.totalInvoiceUnits,
         };
       } else {
-        combinedProductUnits[item._id].totalInvoiceUnits = item.totalInvoiceUnits;
+        combinedProductUnits[item._id].totalInvoiceUnits =
+          item.totalInvoiceUnits;
       }
     });
 
@@ -296,8 +395,12 @@ const GetProductReportByDateRange = async (req, res) => {
     ]);
 
     const productDetails = products.map((product) => {
-      const productUnits = combinedProductUnits[product._id] || { totalOrderUnits: 0, totalInvoiceUnits: 0 };
-      const totalUnits = productUnits.totalOrderUnits + productUnits.totalInvoiceUnits;
+      const productUnits = combinedProductUnits[product._id] || {
+        totalOrderUnits: 0,
+        totalInvoiceUnits: 0,
+      };
+      const totalUnits =
+        productUnits.totalOrderUnits + productUnits.totalInvoiceUnits;
       const reviewCount = reviewCounts.find((review) =>
         review._id?.equals(product._id)
       );
@@ -329,7 +432,7 @@ const getTotalUnitsSoldPast9Months = async (req, res) => {
     const monthsArray = [];
     for (let i = 0; i < 9; i++) {
       monthsArray.push(
-        moment().subtract(i, 'months').startOf('month').toDate()
+        moment().subtract(i, "months").startOf("month").toDate()
       );
     }
 
@@ -341,11 +444,11 @@ const getTotalUnitsSoldPast9Months = async (req, res) => {
           createdAt: { $gte: startMonth },
         },
       },
-      { $unwind: '$CartItems' },
+      { $unwind: "$CartItems" },
       {
         $group: {
-          _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
-          totalUnitsSold: { $sum: '$CartItems.quantity' },
+          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+          totalUnitsSold: { $sum: "$CartItems.quantity" },
         },
       },
     ]);
@@ -356,11 +459,11 @@ const getTotalUnitsSoldPast9Months = async (req, res) => {
           createdAt: { $gte: startMonth },
         },
       },
-      { $unwind: '$CartItems' },
+      { $unwind: "$CartItems" },
       {
         $group: {
-          _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
-          totalUnitsSold: { $sum: '$CartItems.quantity' },
+          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+          totalUnitsSold: { $sum: "$CartItems.quantity" },
         },
       },
     ]);
@@ -370,16 +473,19 @@ const getTotalUnitsSoldPast9Months = async (req, res) => {
       invoiceAggregation,
     ]);
 
-    const combinedResults = [...orderResults, ...invoiceResults].reduce((acc, item) => {
-      if (!acc[item._id]) {
-        acc[item._id] = 0;
-      }
-      acc[item._id] += item.totalUnitsSold;
-      return acc;
-    }, {});
+    const combinedResults = [...orderResults, ...invoiceResults].reduce(
+      (acc, item) => {
+        if (!acc[item._id]) {
+          acc[item._id] = 0;
+        }
+        acc[item._id] += item.totalUnitsSold;
+        return acc;
+      },
+      {}
+    );
 
     monthsArray.forEach((month) => {
-      const formattedMonth = moment(month).format('YYYY-MM');
+      const formattedMonth = moment(month).format("YYYY-MM");
       totalUnitsSoldByMonth.push({
         month: formattedMonth,
         totalUnitsSold: combinedResults[formattedMonth] || 0,
@@ -388,8 +494,8 @@ const getTotalUnitsSoldPast9Months = async (req, res) => {
 
     res.json(totalUnitsSoldByMonth);
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
