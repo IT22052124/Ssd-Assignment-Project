@@ -9,7 +9,6 @@ const moment = require("moment");
 const createCustomer = async (req, res, next) => {
   try {
     const { name, telephone, mail, address, city, password } = req.body;
-    console.log(name, telephone, mail, address, city, password);
 
     // Prevent duplicate registrations by email
     try {
