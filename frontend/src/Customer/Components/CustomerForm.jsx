@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { withCsrf } from "../../utils/csrf";
 import Input from "../../Shared/Components/FormElements/input";
 import Dropdown from "../../Shared/Components/FormElements/Dropdown";
 import ImageUpload from "../../Shared/Components/FormElements/ImageUpload";
@@ -92,9 +93,11 @@ const CustomerForm = () => {
   const handleGoogleCredential = async (response) => {
     try {
       const idToken = response.credential;
-      const res = await axios.post(
+      const res = await withCsrf(
+        axios.post,
         "http://localhost:5000/auth/google/customer/signup",
-        { idToken }
+        { idToken },
+        { withCredentials: true }
       );
       if (res.data?.message === "Success" && res.data?.user?._id) {
         // Auto-login the new customer
@@ -106,7 +109,12 @@ const CustomerForm = () => {
       }
     } catch (err) {
       console.error(err);
-      Toast("Google sign-up failed. Try again or use the form.", "error");
+      const msg =
+        err?.response?.data?.message ||
+        (err?.response?.status === 409
+          ? "An account with this email already exists. Please sign in instead."
+          : "Google sign-up failed. Try again or use the form.");
+      Toast(msg, err?.response?.status === 409 ? "warning" : "error");
     }
   };
 
@@ -140,14 +148,29 @@ const CustomerForm = () => {
     formData.append("password", formState.inputs.password.value);
     formData.append("image", formState.inputs.image.value);
 
-    axios
-      .post("http://localhost:5000/customer/", formData)
+    withCsrf(axios.post, "http://localhost:5000/customer/", formData, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    })
       .then((res) => {
         setLoading(false);
-        navigate("/Products/");
+        if (res.status === 201) {
+          Toast("Registered successfully ✅", "success");
+          navigate("/Products/");
+        } else {
+          Toast("Registration completed.", "success");
+          navigate("/Products/");
+        }
       })
       .catch((err) => {
         console.error(err);
+        const status = err?.response?.status;
+        const msg =
+          err?.response?.data?.message ||
+          (status === 409
+            ? "An account with this email already exists. Please sign in instead."
+            : "Registration failed. Please check your details and try again.");
+        Toast(msg, status === 409 ? "warning" : "error");
         setLoading(false);
       });
     console.table(Object.fromEntries(formData));

@@ -25,8 +25,8 @@ const CustomerLogin = async (req, res) => {
           const token = signCustomerToken(user);
           res.cookie("cust_access", token, {
             httpOnly: true,
-            sameSite: "lax",
-            secure: false, // set true behind HTTPS
+            sameSite: "none", // allow cross-site requests from frontend dev server
+            secure: true, // required by browsers when SameSite=None; works on localhost
             maxAge: 2 * 60 * 60 * 1000, // 2 hours
           });
         } catch (e) {
@@ -52,8 +52,8 @@ const CustomerLogout = (req, res) => {
   try {
     res.clearCookie("cust_access", {
       httpOnly: true,
-      sameSite: "lax",
-      secure: false,
+      sameSite: "none",
+      secure: true,
     });
   } catch (e) {
     // ignore

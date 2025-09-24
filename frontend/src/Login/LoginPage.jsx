@@ -33,7 +33,21 @@ export const LoginPage = () => {
       }
     } catch (err) {
       console.error(err);
-      Toast("Google sign-in failed. Try again or use email/password.", "error");
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message || "";
+      if (status === 401 && /customer not found/i.test(msg)) {
+        Toast(
+          "No account found for this Google email. Please sign up.",
+          "warning"
+        );
+      } else if (status === 401 && /invalid google token/i.test(msg)) {
+        Toast("Invalid Google sign-in. Please try again.", "error");
+      } else {
+        Toast(
+          "Google sign-in failed. Try again or use email/password.",
+          "error"
+        );
+      }
     }
   };
 
@@ -63,16 +77,44 @@ export const LoginPage = () => {
         { mail, password },
         { withCredentials: true }
       );
-      if (res.data.message === "Success") {
+      if (res.data?.message === "Success") {
         auth.login(res.data.user._id);
         Toast("Login Successfully !!", "success");
         navigate("/Products");
+      } else if (typeof res.data === "string") {
+        if (/no record exsisted/i.test(res.data)) {
+          Toast("No account found for this email. Please register.", "warning");
+        } else if (/password is incorrect/i.test(res.data)) {
+          Toast("Incorrect password. Please try again.", "error");
+        } else {
+          Toast("Login failed. Please try again.", "error");
+        }
+      } else if (typeof res.data?.message === "string") {
+        const msg = res.data.message;
+        if (/no record/i.test(msg)) {
+          Toast("No account found for this email. Please register.", "warning");
+        } else if (/password/i.test(msg) && /incorrect/i.test(msg)) {
+          Toast("Incorrect password. Please try again.", "error");
+        } else {
+          Toast(msg, "error");
+        }
       } else {
-        Toast("Invalid mail / Password", "error");
+        Toast("Invalid email / password", "error");
       }
     } catch (err) {
       console.log(err);
-      Toast("Login failed. Please try again.", "error");
+      const status = err?.response?.status;
+      const data = err?.response?.data;
+      const msg = (typeof data === "string" ? data : data?.message) || "";
+      if (/no record/i.test(msg)) {
+        Toast("No account found for this email. Please register.", "warning");
+      } else if (/password/i.test(msg) && /incorrect/i.test(msg)) {
+        Toast("Incorrect password. Please try again.", "error");
+      } else if (status === 429) {
+        Toast("Too many attempts. Please wait and try again.", "warning");
+      } else {
+        Toast("Login failed. Please try again.", "error");
+      }
     }
   };
 

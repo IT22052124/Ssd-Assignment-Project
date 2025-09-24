@@ -7,34 +7,53 @@ const Order = require("../Models/OrderModel");
 const moment = require("moment");
 
 const createCustomer = async (req, res, next) => {
-  const { name, telephone, mail, address, city, password } = req.body;
+  try {
+    const { name, telephone, mail, address, city, password } = req.body;
+    console.log(name, telephone, mail, address, city, password);
 
-  const latestCustomer = await Customer.find().sort({ _id: -1 }).limit(1);
-  let id;
+    // Prevent duplicate registrations by email
+    try {
+      const exists = await Customer.findOne({ mail: mail });
+      if (exists) {
+        return res.status(409).json({
+          message:
+            "An account with this email already exists. Please sign in instead.",
+        });
+      }
+    } catch (e) {
+      return res.status(500).json({ message: "Failed to validate email" });
+    }
 
-  if (latestCustomer.length !== 0) {
-    const latestId = parseInt(latestCustomer[0].ID.slice(1));
-    id = "C" + String(latestId + 1).padStart(4, "0");
-  } else {
-    id = "C0001";
+    const latestCustomer = await Customer.find().sort({ _id: -1 }).limit(1);
+    let id;
+
+    if (latestCustomer.length !== 0) {
+      const latestId = parseInt(latestCustomer[0].ID.slice(1));
+      id = "C" + String(latestId + 1).padStart(4, "0");
+    } else {
+      id = "C0001";
+    }
+
+    let path = "uploads/images/No-Image-Placeholder.png";
+    if (req.file && req.file.path) path = req.file.path;
+
+    const newCustomer = {
+      ID: id,
+      name: name,
+      telephone: telephone,
+      mail: mail,
+      address: address,
+      city: city,
+      password: await bcrypt.hash(password, 12),
+      image: path,
+    };
+
+    const customer = await Customer.create(newCustomer);
+
+    return res.status(201).send(customer);
+  } catch (err) {
+    console.log("costumeer create", err.message);
   }
-
-  let path = "uploads/images/No-Image-Placeholder.png";
-  if (req.file && req.file.path) path = req.file.path;
-
-  const newCustomer = {
-    ID: id,
-    name: name,
-    telephone: telephone,
-    mail: mail,
-    address: address,
-    city: city,
-    password: await bcrypt.hash(password, 12),
-    image: path,
-  };
-
-  const customer = await Customer.create(newCustomer);
-  return res.status(201).send(customer);
 };
 
 const listCustomer = async (req, res) => {

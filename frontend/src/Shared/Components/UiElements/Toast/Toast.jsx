@@ -1,7 +1,6 @@
 import { toast } from "react-toastify";
 
-const Toast = ( message, Type) => {
-  let element;
+const Toast = (message, Type) => {
   const value = {
     position: "top-right",
     autoClose: 5000,
@@ -12,20 +11,21 @@ const Toast = ( message, Type) => {
     progress: undefined,
     theme: "light",
   };
-  if (Type === "info") {
-    element = toast.info(message, value);
-  } else if (Type === "success") {
-    element = toast.success(message, value);
-  } else if (Type === "warn") {
-    element = toast.warn(message, value);
-  } else if (Type === "error") {
-    element = toast.error(message, value);
-  } else {
-    element = toast("🦄 Wow so easy!", value);
+
+  const kind = (Type || "info").toString().toLowerCase();
+  switch (kind) {
+    case "info":
+      return toast.info(message, value);
+    case "success":
+      return toast.success(message, value);
+    case "warn":
+    case "warning":
+      return toast.warn(message, value);
+    case "error":
+      return toast.error(message, value);
+    default:
+      return toast(message || "Notification", value);
   }
-  return element
-    
-  ;
 };
 
 export default Toast;

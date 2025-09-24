@@ -76,8 +76,8 @@ const googleCustomerSignup = async (req, res) => {
       const token = signCustomerToken(safe);
       res.cookie("cust_access", token, {
         httpOnly: true,
-        sameSite: "lax",
-        secure: false,
+        sameSite: "none",
+        secure: true,
         maxAge: 2 * 60 * 60 * 1000,
       });
     } catch (e) {}
@@ -137,8 +137,8 @@ const googleCustomerAuth = async (req, res) => {
       const token = signCustomerToken(safe);
       res.cookie("cust_access", token, {
         httpOnly: true,
-        sameSite: "lax",
-        secure: false,
+        sameSite: "none",
+        secure: true,
         maxAge: 2 * 60 * 60 * 1000,
       });
     } catch (e) {}

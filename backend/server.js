@@ -31,6 +31,7 @@ const app = express();
 const sanitize = require("./middleware/sanitize"); // Request sanitizer for NoSQL injection protection
 const mongoSanitize = require("./middleware/mongoSanitize"); // MongoDB query sanitization utilities
 const { apiRateLimiter } = require("./utils/rateLimiter");
+const csrfProtection = require("./middleware/csrf");
 
 // Routes
 const DeliveryLoginRoute = require("./Routes/DeliveryLoginRoute");
@@ -61,7 +62,7 @@ app.use(
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
   })
 );
 
@@ -88,6 +89,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// CSRF token endpoint for clients to fetch token (used by frontend withCsrf helper)
+app.get("/csrf-token", csrfProtection, (req, res) => {
+  try {
+    const token = req.csrfToken();
+    return res.status(200).json({ csrfToken: token });
+  } catch (e) {
+    return res.status(500).json({ message: "Failed to generate CSRF token" });
+  }
+});
+
 app.use("/product", ProductRoute);
 app.use("/customer", CustomerRoute);
 app.use("/supplier", SupplierRoute);
@@ -98,7 +109,9 @@ app.use("/delivery", DeliveryRoute);
 app.use("/cart", cart);
 app.use("/OffPay", OffPay);
 app.use("/OnPay", OnPay);
+// Support both lowercase and capitalized login paths
 app.use("/Login", LoginRoute);
+app.use("/login", LoginRoute);
 app.use("/logout", LogoutRoute);
 app.use("/order", OrderRoute);
 app.use("/salary", SalaryRoute);

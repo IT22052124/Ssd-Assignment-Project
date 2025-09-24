@@ -20,11 +20,21 @@ export function injectCsrf(config = {}) {
 
 export async function withCsrf(requestFn, ...args) {
   if (!csrfToken) await getCsrfToken();
-  const configArgIndex = args.findIndex(arg => arg && typeof arg === 'object' && arg.headers);
-  if (configArgIndex !== -1) {
-    args[configArgIndex] = injectCsrf(args[configArgIndex]);
+  // Determine the config position for axios methods:
+  // - axios.get(url, config) => last arg is config
+  // - axios.post(url, data, config) => last arg is config
+  // We'll treat the last argument as config if it's a plain object,
+  // otherwise append a new config.
+  const lastIndex = args.length - 1;
+  const looksLikeObject = (v) =>
+    v && typeof v === "object" && !Array.isArray(v);
+  const hasConfig = lastIndex >= 0 && looksLikeObject(args[lastIndex]);
+  const cfg = hasConfig ? args[lastIndex] : {};
+  const merged = injectCsrf({ ...(cfg || {}) });
+  if (hasConfig) {
+    args[lastIndex] = merged;
   } else {
-    args.push(injectCsrf());
+    args.push(merged);
   }
   return requestFn(...args);
 }
