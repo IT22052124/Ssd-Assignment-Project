@@ -137,6 +137,15 @@ const mongoOptions = {
   socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
 };
 
+// Global error handler (should be after all routes and before DB connect)
+app.use((err, req, res, next) => {
+  console.error(err.stack || err.message || err);
+  if (err.name === "ValidationError") {
+    return res.status(400).json({ message: err.message });
+  }
+  res.status(400).json({ message: err.message || "Invalid request" });
+});
+
 // Connect to MongoDB with security options
 mongoose
   .connect(process.env.MONGO_URL, mongoOptions)

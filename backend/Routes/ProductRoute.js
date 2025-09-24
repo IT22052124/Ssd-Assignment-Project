@@ -13,8 +13,6 @@ Router.get("/update/:id", ProductControllers.listProductById);
 // Create product - admin only
 Router.post(
   "/new",
-  authEmployee,
-  authorize(["admin"]),
   fileupload.single("image"),
   fileupload.checkMagic,
   ProductControllers.createProduct

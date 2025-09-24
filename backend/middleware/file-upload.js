@@ -35,7 +35,6 @@ const fileupload = multer({
       return cb(new Error("Invalid file type"), false);
     }
 
-    // Accept for now; we will check content after saving
     cb(null, true);
   },
 });
