@@ -7,58 +7,62 @@ const Order = require("../Models/OrderModel");
 const moment = require("moment");
 
 const createCustomer = async (req, res, next) => {
-  const { name, telephone, mail, address, city, password } = req.body;
+  try {
+    const { name, telephone, mail, address, city, password } = req.body;
 
-  const latestCustomer = await Customer.find().sort({ _id: -1 }).limit(1);
-  let id;
+    const latestCustomer = await Customer.find().sort({ _id: -1 }).limit(1);
+    let id;
 
-  if (latestCustomer.length !== 0) {
-    const latestId = parseInt(latestCustomer[0].ID.slice(1));
-    id = "C" + String(latestId + 1).padStart(4, "0");
-  } else {
-    id = "C0001";
+    if (latestCustomer.length !== 0) {
+      const latestId = parseInt(latestCustomer[0].ID.slice(1));
+      id = "C" + String(latestId + 1).padStart(4, "0");
+    } else {
+      id = "C0001";
+    }
+
+    let path = "uploads/images/No-Image-Placeholder.png";
+    if (req.file && req.file.path) path = req.file.path;
+
+    const newCustomer = {
+      ID: id,
+      name: name,
+      telephone: telephone,
+      mail: mail,
+      address: address,
+      city: city,
+      password: await bcrypt.hash(password, 12),
+      image: path,
+    };
+
+    const customer = await Customer.create(newCustomer);
+    return res.status(201).send(customer);
+  } catch (error) {
+    next(new HttpError('Failed to create customer', 500));
   }
-
-  let path = "uploads/images/No-Image-Placeholder.png";
-  if (req.file && req.file.path) path = req.file.path;
-
-  const newCustomer = {
-    ID: id,
-    name: name,
-    telephone: telephone,
-    mail: mail,
-    address: address,
-    city: city,
-    password: await bcrypt.hash(password, 12),
-    image: path,
-  };
-
-  const customer = await Customer.create(newCustomer);
-  return res.status(201).send(customer);
 };
 
-const listCustomer = async (req, res) => {
+const listCustomer = async (req, res, next) => {
   try {
     const customer = await Customer.find({}, { password: 0 });
     return res.status(200).json(customer);
   } catch (error) {
-    console.log(error.message);
-    res.status(500).send({ message: error.message });
+    next(new HttpError('Failed to list customers', 500));
   }
 };
-const listCustomerById = async (req, res) => {
+const listCustomerById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const customer = await Customer.findById(id).select("-password");
-
+    if (!customer) {
+      return next(new HttpError('Customer not found', 404));
+    }
     return res.status(200).json(customer);
   } catch (error) {
-    console.log(error.message);
-    res.status(500).send({ message: error.message });
+    next(new HttpError('Failed to get customer by ID', 500));
   }
 };
 
-const UpdateCustomer = async (req, res) => {
+const UpdateCustomer = async (req, res, next) => {
   try {
     const { id } = req.params;
     const allowed = {};
@@ -78,33 +82,31 @@ const UpdateCustomer = async (req, res) => {
     const result = await Customer.findByIdAndUpdate(id, { $set: allowed });
 
     if (!result) {
-      return res.status(404).send({ message: "Customer Not Found !" });
+      return next(new HttpError('Customer not found', 404));
     }
 
     return res.status(200).send({ message: "Customer Updated Successfully!" });
   } catch (error) {
-    console.log(error.message);
-    res.status(500).send({ message: error.message });
+    next(new HttpError('Failed to update customer', 500));
   }
 };
 
-const DeleteCustomer = async (req, res) => {
+const DeleteCustomer = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await Customer.findByIdAndDelete(id);
 
     if (!result) {
-      return res.status(404).send({ message: "Customer Not Found !" });
+      return next(new HttpError('Customer not found', 404));
     }
 
     return res.status(200).send({ message: "Customer Deleted Successfully!" });
   } catch (error) {
-    console.log(error.message);
-    res.status(500).send({ message: error.message });
+    next(new HttpError('Failed to delete customer', 500));
   }
 };
 
-const getTopCustomersThisMonth = async (req, res) => {
+const getTopCustomersThisMonth = async (req, res, next) => {
   try {
     const startOfMonth = moment("2024-01-01");
     const endOfMonth = moment().endOf("month");
@@ -160,8 +162,7 @@ const getTopCustomersThisMonth = async (req, res) => {
 
     res.json(topCustomersDetails);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    next(new HttpError('Failed to get top customers', 500));
   }
 };
 
