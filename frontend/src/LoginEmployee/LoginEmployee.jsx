@@ -68,7 +68,6 @@ export const EmployeeLoginPage = () => {
     axios
       .post("http://localhost:5000/EmployeeChecklogin/", { username, password })
       .then((res) => {
-        console.log(res.data);
         if (res.data.message === "admin") {
           auth.login(res.data?.employeeId, res.data?.avatarUrl);
           Toast("Login Successfully !!", "success");
@@ -82,7 +81,26 @@ export const EmployeeLoginPage = () => {
         }
       })
       .catch((error) => {
-        Toast(error.response.data.message, "error");
+        console.log(error);
+        // Improved error handling
+        if (error.response) {
+          // The server responded with an error status code
+          if (error.response.status === 401) {
+            Toast("Unauthorized: Invalid username or password", "error");
+          } else if (error.response.status === 429) {
+            Toast("Too many login attempts. Please try again later.", "error");
+          } else if (error.response.data && error.response.data.error) {
+            Toast(error.response.data.error, "error");
+          } else {
+            Toast("Login failed. Please try again.", "error");
+          }
+        } else if (error.request) {
+          // The request was made but no response was received
+          Toast("Server not responding. Please try again later.", "error");
+        } else {
+          // Something happened in setting up the request
+          Toast("An error occurred. Please try again.", "error");
+        }
       });
   };
 
